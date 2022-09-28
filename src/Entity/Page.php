@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\PageRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PageRepository::class)]
 class Page
@@ -11,19 +13,29 @@ class Page
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    #[Groups(['user'])]
+    #[Assert\NotBlank]
+    protected ?string $title = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $body = null;
+    #[Groups(['user'])]
+    #[Assert\NotBlank]
+    protected ?string $body = null;
 
     #[ORM\Column]
+    #[Groups(['user'])]
     private ?int $authorId = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['user'])]
     private ?int $status = null;
+
+    #[ORM\ManyToOne(inversedBy: 'pages')]
+    private ?Category $category = null;
 
     public function getId(): ?int
     {
@@ -74,6 +86,18 @@ class Page
     public function setStatus(?int $status): self
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): self
+    {
+        $this->category = $category;
 
         return $this;
     }

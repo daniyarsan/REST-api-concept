@@ -3,8 +3,11 @@
 namespace App\Repository;
 
 use App\Entity\Page;
+use App\Traits\QueryPublish;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @extends ServiceEntityRepository<Page>
@@ -16,6 +19,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PageRepository extends ServiceEntityRepository
 {
+    use QueryPublish;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Page::class);
@@ -39,28 +44,28 @@ class PageRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Page[] Returns an array of Page objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('p.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @param Request $request
+     * @return QueryBuilder
+     */
+    public function getPageQuery(Request $request): QueryBuilder
+    {
+        $filters = $request->get('filter', []);
 
-//    public function findOneBySomeField($value): ?Page
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $query = $this->createQueryBuilder('p')
+            ->innerJoin('p.category', 'pc');
+
+
+        if (isset($filters['id']) && $filters['id']) {
+            $query->andWhere('p.id = :id')
+                ->setParameter('id', $filters['id']);
+        }
+
+        if (isset($filters['title']) && $filters['title']) {
+            $query->andWhere('LOWER(p.title) LIKE :title')
+                ->setParameter('title', '%'.mb_strtolower($filters['title']).'%');
+        }
+
+        return $query;
+    }
 }
