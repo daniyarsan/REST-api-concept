@@ -14,7 +14,7 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class PageUpdater
+class PageDeleter
 {
     use ErrorTrait;
 
@@ -26,29 +26,11 @@ class PageUpdater
     )
     {}
 
-    public function update(Request $request, Page $page)
+    public function delete(Page $page)
     {
-        $this->serializer
-            ->deserialize(
-                $request->getContent(),
-                Page::class,
-                'json',
-                [AbstractNormalizer::OBJECT_TO_POPULATE => $page]
-            );
-
-        $errors = $this->validator->validate($page);
-
-        if (count($errors) > 0) {
-            return $this->prepareErrorResponse($errors);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $form = $this->formFactory->create(PageType::class, $page);
-        $form->submit($data, false);
-        $page = $form->getData();
-
-        $this->entityManager->persist($page);
+        $this->entityManager->remove($page);
         $this->entityManager->flush();
+
 
         return $page;
     }

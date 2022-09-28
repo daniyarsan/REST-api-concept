@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Business\Page\PageCreator;
+use App\Business\Page\PageDeleter;
 use App\Business\Page\PageUpdater;
 use App\Entity\Page;
+use App\Helper\ExceptionHandlingHelper;
 use App\Helper\ListResponseHelper;
 use App\Repository\PageRepository;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
@@ -19,6 +21,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route(path: "/pages/api", name: "pages_api_")]
 class PageController extends AbstractController
 {
+    use ExceptionHandlingHelper;
+
     public function __construct(
         private PageRepository $pages,
         private SerializerInterface $serializer
@@ -91,13 +95,22 @@ class PageController extends AbstractController
         );
     }
 
-    #[Route('/delete', name: 'delete', methods: ["POST"])]
+    #[Route('/delete/{id}', name: 'delete', methods: ["POST"])]
+    #[ParamConverter('page', Page::class)]
     public function delete(
-        Request $request,
-        ListResponseHelper $listResponseHelper): Response
+        Page $page,
+        PageDeleter $pageDeleter): Response
     {
-        $query = $this->pages->getPageQuery($request);
+        try{
+            $pageDeleter->delete($page);
+        } catch (\Exception $exception){
+            return $this->exceptionHandle($exception);
+        }
 
-        return $listResponseHelper->getResponse($request, $query, 'user');
+        return $this->json(
+            [],
+            Response::HTTP_NO_CONTENT,
+            []
+        );
     }
 }
