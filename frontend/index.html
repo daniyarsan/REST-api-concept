@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+      .container {
+        max-width: 80%;
+      }
+
+      .form-control-transparent {
+        border: none;
+        background: transparent;
+      }
+
+      .form-control-title {
+        font-size: 40px;
+      }
+
+      .editorsBlock {
+        box-shadow: 5px 2px 15px #c4c4c4;
+        border-radius: 5px;
+        padding: 20px;
+      }
+
+      .ql-container {
+        box-sizing: border-box;
+        font-family: Helvetica, Arial, sans-serif;
+        /* font-size: 13px; */
+        font-size: 18px;
+        height: 100%;
+        margin: 0px;
+        color: #6f6f6f;
+        position: relative;
+      }
+
+      .ql-container p {
+        line-height: 35px;
+      }
+      .ql-editor {
+        min-height: 300px;
+      }
+
+      .ql-editor .ql-size-small {
+        /* font-size: 0.75em; */
+        font-size: 15px;
+      }
+
+      .ql-editor .ql-size-large {
+        /* font-size: 1.5em; */
+        font-size: 15px;
+      }
+
+      .ql-editor .ql-size-huge {
+        /* font-size: 2.5em; */
+        font-size: 16px;
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+      .ql-snow .ql-picker.ql-size .ql-picker-item::before {
+        /* content: 'Normal'; */
+        content: "12px";
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="small"]::before,
+      .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before {
+        /* content: 'Small'; */
+        content: "10px";
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="large"]::before,
+      .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before {
+        /* content: 'Large'; */
+        content: "14px";
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="huge"]::before,
+      .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before {
+        /* content: 'Huge'; */
+        content: "16px";
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before {
+        font-size: 10px;
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before {
+        /* font-size: 18px; */
+        font-size: 14px;
+      }
+
+      .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before {
+        /* font-size: 32px; */
+        font-size: 16px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div x-data="PageConstructor" class="container pt-5">
+      <div class="row">
+        <div class="col-md-3 order-md-2 m-4">
+          <div class="form-group">
+            <label for="exampleInputPassword1">Категория</label>
+            <select class="form-control" name="" id="">
+              <option value="">FAQ</option>
+            </select>
+          </div>
+
+          <div class="form-group mt-4">
+            <label for="exampleInputPassword1">Подкатегория</label>
+            <select class="form-control" name="" id="">
+              <option value="">Инструкции</option>
+            </select>
+          </div>
+          <div class="form-group mt-4">
+            <label for="exampleInputPassword1">Статус</label>
+            <select class="form-control" name="" id="">
+              <option value="">Опубликовать</option>
+            </select>
+          </div>
+
+          <div x-text=""></div>
+          <div class="form-group mt-4">
+            <button class="btn btn-primary w-100">Сохранить</button>
+          </div>
+        </div>
+
+        <div class="col-md-8 order-md-1 editorsBlock">
+          <div class="d-flex flex-column">
+            <input class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title" />
+            <input class="form-control form-control-transparent form-control-author" type="text" name="author" placeholder="Author" />
+
+            <div class="mt-2 bg-white" wire:ignore>
+              <div x-ref="quillEditor" x-init="Container.initEditor" wire:model.debounce.2000ms="description">
+                <p class="lead">Write your story...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script>
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("PageConstructor", () => {
+          return new PageConstructor()
+        })
+      })
+
+      class PageConstructor {
+        Container = {}
+
+        constructor() {
+          this.Container.article = ""
+          this.Container.initEditor = this.initEditor
+        }
+
+        getData() {
+          fetch(`https://covid-api.mmediagroup.fr/v1/cases?country=${this.Container.country}`)
+            .then((res) => res.json())
+            .then((res) => {
+              this.Container.result = res?.All?.confirmed
+            })
+        }
+
+        initEditor() {
+          quill = new Quill($refs.quillEditor, { theme: "bubble" })
+
+          quill.on("text-change", function () {
+            $dispatch("input", quill.root.innerHTML)
+          })
+        }
+      }
+    </script>
+  </body>
+</html>
