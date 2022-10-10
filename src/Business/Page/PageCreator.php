@@ -5,6 +5,7 @@ namespace App\Business\Page;
 
 
 use App\Entity\Page;
+use App\Service\Util;
 use App\Traits\ErrorTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +20,8 @@ class PageCreator
     public function __construct(
         private SerializerInterface $serializer,
         private ValidatorInterface $validator,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private Util $util,
     )
     {}
 

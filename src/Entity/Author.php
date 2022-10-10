@@ -2,34 +2,31 @@
 
 namespace App\Entity;
 
-use App\Repository\CategoryRepository;
+use App\Repository\AuthorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity(repositoryClass: CategoryRepository::class)]
-class Category
+#[ORM\Entity(repositoryClass: AuthorRepository::class)]
+class Author
 {
+    use TimestampableTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['user'])]
-    private ?string $name = null;
-
-    #[ORM\Column(length: 255)]
-    #[Groups(['user'])]
-    private ?string $alias = null;
+    #[ORM\Column(length: 255, )]
+    private ?string $slug = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['user'])]
-    private ?int $parentId = null;
+    private ?string $firstName = null;
 
-    #[ORM\OneToMany(mappedBy: 'category', targetEntity: Page::class)]
+    #[ORM\Column(nullable: true)]
+    private ?string $lastname = null;
+
+    #[ORM\OneToMany(mappedBy: 'author', targetEntity: Page::class)]
     private Collection $pages;
 
     public function __construct()
@@ -42,44 +39,44 @@ class Category
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getFirstName(): ?string
     {
-        return $this->name;
+        return $this->firstName;
     }
 
-    public function setName(string $name): self
+    public function setFirstName(string $firstName): self
     {
-        $this->name = $name;
+        $this->firstName = $firstName;
 
         return $this;
     }
 
-    public function getAlias(): ?string
+    public function getLastname(): ?string
     {
-        return $this->alias;
+        return $this->lastname;
     }
 
-    public function setAlias(string $alias): self
+    public function setLastname(string $lastname): self
     {
-        $this->alias = $alias;
+        $this->lastname = $lastname;
 
         return $this;
     }
 
     /**
-     * @return int|null
+     * @return string|null
      */
-    public function getParentId(): ?int
+    public function getSlug(): ?string
     {
-        return $this->parentId;
+        return $this->slug;
     }
 
     /**
-     * @param int|null $parentId
+     * @param string|null $slug
      */
-    public function setParentId(?int $parentId): void
+    public function setSlug(?string $slug): void
     {
-        $this->parentId = $parentId;
+        $this->slug = $slug;
     }
 
     /**
@@ -94,7 +91,7 @@ class Category
     {
         if (!$this->pages->contains($page)) {
             $this->pages->add($page);
-            $page->setCategory($this);
+            $page->setAuthor($this);
         }
 
         return $this;
@@ -104,11 +101,16 @@ class Category
     {
         if ($this->pages->removeElement($page)) {
             // set the owning side to null (unless already changed)
-            if ($page->getCategory() === $this) {
-                $page->setCategory(null);
+            if ($page->getAuthor() === $this) {
+                $page->setAuthor(null);
             }
         }
 
         return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->firstName . ' ' . $this->lastname;
     }
 }

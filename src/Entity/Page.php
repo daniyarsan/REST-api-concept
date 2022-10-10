@@ -10,6 +10,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: PageRepository::class)]
 class Page
 {
+    use TimestampableTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -28,11 +30,11 @@ class Page
 
     #[ORM\Column]
     #[Groups(['user'])]
-    private ?int $authorId = null;
+    private ?int $status = 0;
 
-    #[ORM\Column(nullable: true)]
-    #[Groups(['user'])]
-    private ?int $status = null;
+
+    #[ORM\ManyToOne(inversedBy: 'pages')]
+    private ?Author $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'pages')]
     private ?Category $category = null;
@@ -66,18 +68,6 @@ class Page
         return $this;
     }
 
-    public function getAuthorId(): ?int
-    {
-        return $this->authorId;
-    }
-
-    public function setAuthorId(int $authorId): self
-    {
-        $this->authorId = $authorId;
-
-        return $this;
-    }
-
     public function getStatus(): ?int
     {
         return $this->status;
@@ -86,6 +76,18 @@ class Page
     public function setStatus(?int $status): self
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getAuthor(): ?Author
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(?Author $author): self
+    {
+        $this->author = $author;
 
         return $this;
     }

@@ -4,7 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Category;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @extends ServiceEntityRepository<Category>
@@ -39,28 +41,40 @@ class CategoryRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Category[] Returns an array of Category objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @param Request $request
+     * @return QueryBuilder
+     */
+    public function getIndexQuery(Request $request): QueryBuilder
+    {
+        $filters = $request->get('filter', []);
 
-//    public function findOneBySomeField($value): ?Category
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $query = $this->createQueryBuilder('c');
+
+
+        if (isset($filters['id']) && $filters['id']) {
+            $query->andWhere('p.id = :id')
+                ->setParameter('id', $filters['id']);
+        }
+
+        if (isset($filters['name']) && $filters['name']) {
+            $query->andWhere('LOWER(p.name) LIKE :name')
+                ->setParameter('name', '%'.mb_strtolower($filters['name']).'%');
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param int $id
+     * @return int|mixed|string
+     */
+    public function findSubcategoriesByCategory(int $id)
+    {
+        $query = $this->createQueryBuilder('c');
+
+        $query->andWhere('c.parentId = :id')->setParameter('id', $id);
+
+        return $query->getQuery()->getResult();
+    }
 }

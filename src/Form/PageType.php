@@ -14,7 +14,7 @@ class PageType extends AbstractType
         $builder
             ->add('title')
             ->add('body')
-            ->add('authorId')
+            ->add('authorName')
             ->add('status')
             ->add('category')
         ;

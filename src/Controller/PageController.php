@@ -16,7 +16,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route(path: "/pages/api", name: "pages_api_")]
 class PageController extends AbstractController
@@ -26,13 +25,15 @@ class PageController extends AbstractController
     public function __construct(
         private PageRepository $pages,
         private SerializerInterface $serializer
-    ) {}
+    ) {
+    }
 
     #[Route('/list', name: 'list', methods: ["GET"])]
     public function all(
         Request $request,
         ListResponseHelper $listResponseHelper): Response
     {
+
         $query = $this->pages->getPageQuery($request);
 
         return $listResponseHelper->getResponse($request, $query, 'user');

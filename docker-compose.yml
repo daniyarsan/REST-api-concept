@@ -1,0 +1,61 @@
+version: '3'
+
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  phpmyadmin:
+    container_name: restapi_phpmyadmin
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - 2021:80
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=121212
+    networks:
+      - app-tier
+    depends_on:
+      - mysql
+      
+  mysql:
+    platform: linux/x86_64
+    container_name: restapi_mysql
+    image: mysql:5.7.38
+    ports:
+      - 2022:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=121212
+      - MYSQL_DATABASE=restapi_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "--user=root", "--password=121212", "--host=127.0.0.1", "ping", "--silent"]
+      interval: 2s
+      timeout: 10s
+      retries: 10
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    networks:
+      - app-tier
+      
+  web:
+    image: nginx:stable-alpine
+    container_name: restapi_web
+    ports:
+     - 2023:80
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/logs:/var/log/nginx/
+    networks:
+      - app-tier
+
+  php:
+    container_name: restapi_php
+    build:
+      context: docker/php
+      dockerfile: Dockerfile
+    networks:
+      - app-tier
+    volumes:
+      - ./:/var/www

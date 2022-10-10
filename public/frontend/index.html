@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Document</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        .container {
+            max-width: 80%;
+        }
+
+        .form-control-transparent {
+            border: none;
+            background: transparent;
+        }
+
+        .form-control-title {
+            font-size: 35px;
+        }
+
+        .editorsBlock {
+            box-shadow: 5px 2px 15px #c4c4c4;
+            border-radius: 5px;
+            padding: 20px;
+        }
+
+        .ql-container {
+            box-sizing: border-box;
+            font-size: 18px;
+            height: 100%;
+            margin: 0px;
+            color: #6f6f6f;
+            position: relative;
+        }
+
+        .ql-container p {
+            line-height: 35px;
+        }
+
+        .ql-editor {
+            min-height: 300px;
+        }
+        .ql-editor.ql-blank::before {
+            color: #acacac;
+            content: attr(data-placeholder);
+            font-style: normal !important;
+            left: 15px;
+            right: 15px;
+        }
+
+        .ql-editor .ql-size-small {
+            /* font-size: 0.75em; */
+            font-size: 15px;
+        }
+
+        .ql-editor .ql-size-large {
+            /* font-size: 1.5em; */
+            font-size: 15px;
+        }
+
+        .ql-editor .ql-size-huge {
+            /* font-size: 2.5em; */
+            font-size: 16px;
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item::before {
+            /* content: 'Normal'; */
+            content: "12px";
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="small"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before {
+            /* content: 'Small'; */
+            content: "10px";
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="large"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before {
+            /* content: 'Large'; */
+            content: "14px";
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="huge"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before {
+            /* content: 'Huge'; */
+            content: "16px";
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before {
+            font-size: 10px;
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before {
+            /* font-size: 18px; */
+            font-size: 14px;
+        }
+
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before {
+            /* font-size: 32px; */
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+<div x-data="PageController"
+     class="container pt-5">
+    <div class="row">
+        <div class="col-md-3 order-md-2 m-4">
+            <div class="form-group">
+                <label for="category">Категория</label>
+                <select x-model="post.category" class="form-control" name="post.category" id="category">
+                    <option value="">Select category</option>
+                    <template x-for="option in Container.categories">
+                        <option :key="option.id" :value="option.name" x-text="option.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="form-group mt-4">
+                <label for="subcategory">Подкатегория</label>
+                <select class="form-control" name="post.category" id="subcategory">
+                    <option value="">Select category</option>
+                </select>
+            </div>
+            <div class="form-group mt-4">
+                <label for="status">Статус</label>
+                <select class="form-control" name="post.status" id="status">
+                    <option value="1">Опубликовать</option>
+                    <option value="0">Черновик</option>
+                </select>
+            </div>
+
+            <div class="form-group mt-4">
+                <button @click="Container.submit" class="btn btn-primary w-100">Сохранить</button>
+            </div>
+        </div>
+
+        <div class="col-md-8 order-md-1 editorsBlock">
+            <div class="d-flex flex-column">
+                <input x-model="post.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
+                <input x-model="post.authorName" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
+
+                <div class="mt-2 bg-white" wire:ignore>
+                    <div
+                            x-ref="quillEditor"
+                            x-init="
+                quill = new Quill($refs.quillEditor, {placeholder: 'Write something great...',theme: 'bubble'});
+                quill.on('text-change', function () {
+                $dispatch('input', Container.setBody(quill.root.innerHTML));
+                });"
+                            wire:model.debounce.2000ms="description"
+                    >
+                        <p class="lead"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+<script>
+    document.addEventListener("alpine:init", () => {
+        Alpine.data("PageController", () => {
+            return new PageController()
+        })
+    })
+
+    class PageController {
+        _URL = "/pages/api/create"
+
+        Container = {}
+
+        constructor() {
+            this.Container = this
+            this.post = {}
+            this.categories = {};
+        }
+
+        setBody(body) {
+            this.post.body = body
+        }
+
+
+        submit() {
+            fetch(this._URL, {
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(this.post),
+                method: "POST",
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                })
+        }
+
+        getSelect() {
+            fetch('/category/api/list')
+                .then(res => res.json())
+                .then(res => {
+                    this.categories = res.result
+                })
+        }
+    }
+
+
+</script>
+</body>
+</html>

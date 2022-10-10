@@ -1,8 +1,5 @@
 #!/bin/bash
 
-bin/console doctrine:database:drop --force
-bin/console doctrine:database:create
-bin/console doctrine:schema:update --force
-bin/console doctrine:fixtures:load -n
-
-
+docker-compose exec php bin/console doctrine:schema:drop --force --full-database
+docker-compose exec php bin/console doctrine:migrations:migrate
+docker-compose exec php bin/console doctrine:fixtures:load
