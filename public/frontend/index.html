@@ -19,7 +19,7 @@
             color: #6f6f6f;
         }
 
-        .form-control{
+        .form-control {
             color: #6f6f6f !important;
         }
 
@@ -27,6 +27,7 @@
             border: none;
             background: transparent;
         }
+
         .form-control-author {
             font-size: 16px;
         }
@@ -61,6 +62,7 @@
         .ql-editor {
             min-height: 300px;
         }
+
         .ql-editor.ql-blank::before {
             color: #acacac;
             content: attr(data-placeholder);
@@ -125,18 +127,6 @@
 </head>
 
 <body>
-<div class="position-fixed top-0 end-0 p-3" style="z-index: 100">
-    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <span class="svg-icon svg-icon-2 svg-icon-primary me-3"></span>
-            <strong class="me-auto">Company</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            Hello, world! This is a toast message.
-        </div>
-    </div>
-</div>
 
 <div x-data="PageController"
      x-init="Container.getCategories()"
@@ -157,7 +147,7 @@
 
             <div class="form-group mt-4">
                 <label for="subcategory">Подкатегория</label>
-                <select @change="Container.setCategoryId()" x-model="subcategory" class="form-control" name="subcategory" id="subcategory">
+                <select @change="Container.post.categoryId = Container.subcategory || Container.category" x-model="subcategory" class="form-control" name="subcategory" id="subcategory">
                     <option value="">Select subcategory</option>
                     <template x-for="option in Container.subcategoriesOptions">
                         <option :key="option.id" :value="option.id" x-text="option.name"></option>
@@ -211,12 +201,12 @@
     })
 
     class PageController {
+        Container = {}
+
         /* API endpoints */
         CREATE_URL = "/pages/api/create"
         CAT_LIST_URL = "/category/api/list"
         CAT_GET_URL = "/category/api/get/"
-
-        Container = {}
 
         constructor() {
             this.Container = this
@@ -230,21 +220,6 @@
 
         setBody(body) {
             this.post.body = body
-        }
-
-
-        submit() {
-            fetch(this.CREATE_URL, {
-                headers: {
-                    'Content-Type': 'application/json;charset=utf-8'
-                },
-                body: JSON.stringify(this.post),
-                method: "POST",
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                })
         }
 
         getCategories() {
@@ -266,8 +241,18 @@
             }
         }
 
-        setCategoryId() {
-            this.post.categoryId = this.subcategory || this.category
+        submit() {
+            fetch(this.CREATE_URL, {
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(this.post),
+                method: "POST",
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                })
         }
     }
 
