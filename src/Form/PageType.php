@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Page;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -15,9 +16,21 @@ class PageType extends AbstractType
             ->add('title')
             ->add('body')
             ->add('authorName')
-            ->add('status')
-            ->add('category')
-        ;
+            ->add('isActive')
+            ->add('category');
+        $builder->get('isActive')
+            ->addModelTransformer(new CallbackTransformer(
+                function ($property) {
+                    dd($property);
+
+                    return (string) $property;
+                },
+                function ($property) {
+                    dd($property);
+
+                    return (bool) $property;
+                }
+            ));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

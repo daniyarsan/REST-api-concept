@@ -8,6 +8,7 @@ use App\Entity\Page;
 use App\Service\Util;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
@@ -34,6 +35,7 @@ class PageDenormalizer implements DenormalizerInterface
             $object->setCategory(!empty($data['categoryId']) ? $this->entityManager->getReference(Category::class, $data['categoryId']) : null);
         }
 
+        $context[AbstractObjectNormalizer::DISABLE_TYPE_ENFORCEMENT] = true;
         return $this->normalizer->denormalize($data, $type, $format, $context);
     }
 

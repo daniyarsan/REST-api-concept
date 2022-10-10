@@ -28,16 +28,15 @@ class Page
     #[Assert\NotBlank]
     protected ?string $body = null;
 
-    #[ORM\Column]
-    #[Groups(['user'])]
-    private ?int $status = 0;
-
-
     #[ORM\ManyToOne(inversedBy: 'pages')]
     private ?Author $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'pages')]
     private ?Category $category = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['user'])]
+    private ?bool $isActive = false;
 
     public function getId(): ?int
     {
@@ -68,18 +67,6 @@ class Page
         return $this;
     }
 
-    public function getStatus(): ?int
-    {
-        return $this->status;
-    }
-
-    public function setStatus(?int $status): self
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
     public function getAuthor(): ?Author
     {
         return $this->author;
@@ -100,6 +87,18 @@ class Page
     public function setCategory(?Category $category): self
     {
         $this->category = $category;
+
+        return $this;
+    }
+
+    public function isIsActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(?bool $isActive): self
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }

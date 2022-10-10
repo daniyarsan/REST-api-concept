@@ -30,9 +30,14 @@ class CategoryController extends AbstractController
         ListResponseHelper $listResponseHelper): Response
     {
 
-        $query = $this->categoryRepo->getIndexQuery($request);
+        $categories = $this->entityManager->getRepository(Category::class)->findCategories();
 
-        return $listResponseHelper->getResponse($request, $query, 'user');
+        return $this->json(
+            $categories,
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'user']
+        );
     }
 
     #[Route('/get/{id}', name: 'get', methods: ["GET"])]

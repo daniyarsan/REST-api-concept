@@ -66,6 +66,18 @@ class CategoryRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return int|mixed|string
+     */
+    public function findCategories()
+    {
+        $query = $this->createQueryBuilder('c');
+
+        $query->andWhere('c.parentId is null');
+
+        return $query->getQuery()->getResult();
+    }
+
+    /**
      * @param int $id
      * @return int|mixed|string
      */

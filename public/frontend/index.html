@@ -10,13 +10,29 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
     <style>
+        input:focus::placeholder, textarea:focus::placeholder {
+            color: transparent;
+        }
+
         .container {
             max-width: 80%;
+            color: #6f6f6f;
+        }
+
+        .form-control{
+            color: #6f6f6f !important;
         }
 
         .form-control-transparent {
             border: none;
             background: transparent;
+        }
+        .form-control-author {
+            font-size: 16px;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
         }
 
         .form-control-title {
@@ -109,29 +125,49 @@
 </head>
 
 <body>
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 100">
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <span class="svg-icon svg-icon-2 svg-icon-primary me-3"></span>
+            <strong class="me-auto">Company</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Hello, world! This is a toast message.
+        </div>
+    </div>
+</div>
+
 <div x-data="PageController"
+     x-init="Container.getCategories()"
      class="container pt-5">
+
     <div class="row">
         <div class="col-md-3 order-md-2 m-4">
             <div class="form-group">
                 <label for="category">Категория</label>
-                <select x-model="post.category" class="form-control" name="post.category" id="category">
+                <select @change="Container.getSubcategories()"
+                        x-model="category" class="form-control" name="category" id="category">
                     <option value="">Select category</option>
-                    <template x-for="option in Container.categories">
-                        <option :key="option.id" :value="option.name" x-text="option.name"></option>
+                    <template x-for="option in Container.categoriesOptions">
+                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
                     </template>
                 </select>
             </div>
 
             <div class="form-group mt-4">
                 <label for="subcategory">Подкатегория</label>
-                <select class="form-control" name="post.category" id="subcategory">
-                    <option value="">Select category</option>
+                <select @change="Container.setCategoryId()" x-model="subcategory" class="form-control" name="subcategory" id="subcategory">
+                    <option value="">Select subcategory</option>
+                    <template x-for="option in Container.subcategoriesOptions">
+                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                    </template>
                 </select>
             </div>
             <div class="form-group mt-4">
-                <label for="status">Статус</label>
-                <select class="form-control" name="post.status" id="status">
+                <label for="isActive">Статус</label>
+                <select x-model="post.isActive" class="form-control" name="post.isActive" id="isActive">
+                    <option>Select status</option>
                     <option value="1">Опубликовать</option>
                     <option value="0">Черновик</option>
                 </select>
@@ -175,14 +211,21 @@
     })
 
     class PageController {
-        _URL = "/pages/api/create"
+        /* API endpoints */
+        CREATE_URL = "/pages/api/create"
+        CAT_LIST_URL = "/category/api/list"
+        CAT_GET_URL = "/category/api/get/"
 
         Container = {}
 
         constructor() {
             this.Container = this
             this.post = {}
-            this.categories = {};
+
+            this.category = '';
+            this.subcategory = '';
+            this.categoriesOptions = [];
+            this.subcategoriesOptions = [];
         }
 
         setBody(body) {
@@ -191,7 +234,7 @@
 
 
         submit() {
-            fetch(this._URL, {
+            fetch(this.CREATE_URL, {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
                 },
@@ -204,15 +247,29 @@
                 })
         }
 
-        getSelect() {
-            fetch('/category/api/list')
+        getCategories() {
+            fetch(this.CAT_LIST_URL)
                 .then(res => res.json())
                 .then(res => {
-                    this.categories = res.result
+                    this.categoriesOptions = res
                 })
         }
-    }
 
+        getSubcategories() {
+            this.subcategoriesOptions = []
+            if (this.category) {
+                fetch(`${this.CAT_GET_URL}${this.category}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        this.subcategoriesOptions = res
+                    })
+            }
+        }
+
+        setCategoryId() {
+            this.post.categoryId = this.subcategory || this.category
+        }
+    }
 
 </script>
 </body>
