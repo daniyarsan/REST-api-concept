@@ -53,8 +53,8 @@ class PageRepository extends ServiceEntityRepository
         $filters = $request->get('filter', []);
 
         $query = $this->createQueryBuilder('p')
-            ->innerJoin('p.category', 'pc');
-
+            ->leftJoin('p.category', 'pc')
+            ->leftJoin('p.author', 'pa');
 
         if (isset($filters['id']) && $filters['id']) {
             $query->andWhere('p.id = :id')
@@ -65,6 +65,7 @@ class PageRepository extends ServiceEntityRepository
             $query->andWhere('LOWER(p.title) LIKE :title')
                 ->setParameter('title', '%'.mb_strtolower($filters['title']).'%');
         }
+        $query->orderBy('p.id', 'desc');
 
         return $query;
     }

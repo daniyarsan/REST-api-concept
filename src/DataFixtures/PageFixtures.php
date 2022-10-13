@@ -25,13 +25,16 @@ class PageFixtures extends Fixture
             $manager->persist($category);
             $manager->flush();
 
-            foreach ($this->getSubCategories() as $categoryItem) {
-                $subcategory = new Category();
-                $subcategory->setAlias($category->getAlias() . '-' . $categoryItem['slug']);
-                $subcategory->setName($category->getName() . ' ' . $categoryItem['title']);
-                $subcategory->setParentId($category->getId());
-                $manager->persist($subcategory);
+            if ($categoryItem['slug'] == 'rules') {
+                foreach ($this->getSubCategories() as $subcategoryItem) {
+                    $subcategory = new Category();
+                    $subcategory->setAlias($subcategoryItem['slug']);
+                    $subcategory->setName($subcategoryItem['title']);
+                    $subcategory->setParentId($category->getId());
+                    $manager->persist($subcategory);
+                }
             }
+
         }
 
         $manager->flush();
@@ -53,20 +56,19 @@ class PageFixtures extends Fixture
     public function getCategories()
     {
         return [
+            ['slug' => 'rules', 'title' => 'Правила Сайта'],
+            ['slug' => 'help', 'title' => 'Помощь'],
+            ['slug' => 'exchange', 'title' => 'Обмен'],
             ['slug' => 'faq', 'title' => 'FAQ'],
-            ['slug' => 'news', 'title' => 'News'],
-            ['slug' => 'import', 'title' => 'Important'],
-            ['slug' => 'notes', 'title' => 'Notes'],
         ];
     }
 
     public function getSubCategories()
     {
         return [
-            ['slug' => 'sub1', 'title' => 'Sub1'],
-            ['slug' => 'sub2', 'title' => 'Sub2'],
-            ['slug' => 'sub3', 'title' => 'Sub3'],
-            ['slug' => 'sub4', 'title' => 'Sub4'],
+            ['slug' => 'common', 'title' => 'Общие'],
+            ['slug' => 'instructions', 'title' => 'Инструкции'],
+            ['slug' => 'questions', 'title' => 'Вопросы']
         ];
     }
 }

@@ -29,6 +29,7 @@ class Page
     protected ?string $body = null;
 
     #[ORM\ManyToOne(inversedBy: 'pages')]
+    #[Groups(['user'])]
     private ?Author $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'pages')]

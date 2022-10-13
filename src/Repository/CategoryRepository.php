@@ -77,9 +77,20 @@ class CategoryRepository extends ServiceEntityRepository
         return $query->getQuery()->getResult();
     }
 
+    public function findSubCategories()
+    {
+        $query = $this->createQueryBuilder('c');
+
+        $query->andWhere('c.parentId is not null');
+
+        return $query->getQuery()->getResult();
+    }
+
     /**
      * @param int $id
      * @return int|mixed|string
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function findSubcategoriesByCategory(int $id)
     {
@@ -89,4 +100,5 @@ class CategoryRepository extends ServiceEntityRepository
 
         return $query->getQuery()->getResult();
     }
+
 }

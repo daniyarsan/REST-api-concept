@@ -6,6 +6,7 @@ use App\Entity\Category;
 use App\Helper\ListResponseHelper;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +26,7 @@ class CategoryController extends AbstractController
     }
 
     #[Route('/list', name: 'list')]
-    public function all(
+    public function list(
         Request $request,
         ListResponseHelper $listResponseHelper): Response
     {
@@ -34,6 +35,41 @@ class CategoryController extends AbstractController
 
         return $this->json(
             $categories,
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'user']
+        );
+    }
+
+    #[Route('/menu', name: 'menu')]
+    public function menu(
+        Request $request,
+        ListResponseHelper $listResponseHelper): Response
+    {
+
+        $query = $this->entityManager
+            ->getRepository(Category::class)
+            ->createQueryBuilder('c')
+            ->getQuery();
+        $rawMenu = $query->getResult(Query::HYDRATE_ARRAY);
+
+        $result = array_reduce($rawMenu, function($agr, $cur) {
+            if ($cur['parentId'] === null) {
+                $agr[] = $cur;
+            } else {
+                $key = array_search($cur['parentId'], array_column($agr, 'id'));
+                if ($key !== false) {
+                    $agr[$key]['child'][] = $cur;
+                }
+            }
+
+
+            return $agr;
+        });
+
+
+        return $this->json(
+            $result,
             Response::HTTP_OK,
             [],
             ['groups' => 'user']
