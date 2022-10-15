@@ -5,8 +5,10 @@ namespace App\Form;
 use App\Entity\Page;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class PageType extends AbstractType
 {
@@ -15,9 +17,14 @@ class PageType extends AbstractType
         $builder
             ->add('title')
             ->add('body')
-            ->add('authorName')
+            ->add('authorName', TextType::class, [
+                'constraints' => array(
+                    new NotBlank(['message' => 'Your error message']),
+                )
+            ])
             ->add('isActive')
             ->add('category');
+
         $builder->get('isActive')
             ->addModelTransformer(new CallbackTransformer(
                 function ($property) {

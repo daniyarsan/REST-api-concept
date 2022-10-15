@@ -28,10 +28,13 @@ class PageDenormalizer implements DenormalizerInterface
         $object = $context[AbstractNormalizer::OBJECT_TO_POPULATE] ?? null;
 
         if ($object) {
-            $author = $this->entityManager->getRepository(Author::class)->findOneBy([
-                'slug' => $this->util->slugify($data['authorName'])
-            ]);
-            $object->setAuthor($author);
+            if (isset($data['authorName'])) {
+                $author = $this->entityManager->getRepository(Author::class)->findOneBy([
+                    'slug' => $this->util->slugify($data['authorName'])
+                ]);
+                $object->setAuthor($author);
+            }
+
             $object->setCategory(!empty($data['categoryId']) ? $this->entityManager->getReference(Category::class, $data['categoryId']) : null);
         }
 

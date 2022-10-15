@@ -30,6 +30,7 @@ class Page
 
     #[ORM\ManyToOne(inversedBy: 'pages')]
     #[Groups(['user'])]
+    #[Assert\NotBlank]
     private ?Author $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'pages')]

@@ -8,130 +8,111 @@
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="./css/main.css" rel="stylesheet"/>
 </head>
 
-<style type="text/css">
+<body class="bg-light">
+    <header class="section-header py-3">
+        <div class="container">
+            <h2>Категории</h2>
+        </div>
+    </header>
 
+    <div x-data="PageController"
+         x-init="Container.initialize()"
+         class="container">
+        <section class="section-content py-3">
+            <div class="row">
+                <aside class="col-lg-3">
+                    <nav class="sidebar mt-3 card py-2 mb-4">
+                        <ul class="nav flex-column">
+                            <template x-for="category in Container.categories">
+                                <li class="nav-item">
+                                    <a @click.prevent="console.log('asdfasfd')" x-bind:href="category.alias" x-text="category.name" class="nav-link"></a>
+                                    <ul x-show="category.child" class="submenu dropdown-menu">
+                                        <template x-for="child in category.child">
+                                            <li><a @click.prevent="console.log('asdfasfd')" x-bind:href="child.alias" x-text="child.name" class="nav-link"></a></li>
+                                        </template>
+                                    </ul>
+                                </li>
+                            </template>
+                        </ul>
+                    </nav>
 
-    /* ============ desktop view ============ */
-    @media all and (min-width: 992px) {
+                    <button @click="Container.isOpenedSubmitForm = !Container.isOpenedSubmitForm" class="btn btn-primary w-100">Доавить страницу</button>
 
-        .sidebar li {
-            position: relative;
-        }
+                    <div x-show="Container.isOpenedSubmitForm" x-transition.opacity class="sidebar mt-3 card py-2 mb-4">
+                       <form class="add-block p-3">
+                           <div class="form-group">
+                               <label for="title">Название</label>
+                               <input type="text" name="title" class="form-control" id="title">
+                           </div>
 
-        .sidebar li .submenu {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: -7px;
-            min-width: 240px;
-        }
+                           <div class="form-group">
+                               <label for="category">Категория</label>
+                               <select name="category" class="form-control" id="category">
+                                   <option value=""></option>
+                               </select>
+                           </div>
 
-        [dir=rtl] .sidebar li .submenu {
-            right: 100%;
-            left: auto;
-        }
+                           <div class="form-group">
+                               <label for="subcategory">Подкатегория</label>
+                               <select name="subcategory" class="form-control" id="subcategory">
+                                   <option value=""></option>
+                               </select>
+                           </div>
 
-        .sidebar li:hover {
-            background: var(--bs-light);
-        }
+                           <button class="btn btn-primary w-100 mt-3">Начать</button>
 
-        .sidebar li:hover > .submenu {
-            display: block;
-        }
-
-    }
-
-    /* ============ desktop view .end// ============ */
-
-
-    /* ============ small devices ============ */
-    @media (max-width: 991px) {
-
-        .sidebar .submenu, .sidebar .dropdown-menu {
-            position: static !important;
-            margin-left: 0.7rem;
-            margin-right: 0.7rem;
-            margin-bottom: .5rem;
-        }
-    }
-
-    /* ============ small devices .end// ============ */
-
-
-    .sidebar .nav-link {
-        font-weight: 500;
-        color: var(--bs-dark);
-    }
-
-    .sidebar .nav-link:hover {
-        background: var(--bs-light);
-        color: var(--bs-primary);
-    }
-
-
-</style>
-
-<body class="bg-light" data-new-gr-c-s-check-loaded="14.1083.0" data-gr-ext-installed="">
-
-<header class="section-header py-3">
-    <div class="container">
-        <h2>Категории</h2>
-    </div>
-</header> <!-- section-header.// -->
-
-<div x-data="PageController"
-     x-init="Container.initialize()"
-     class="container">
-    <section class="section-content py-3">
-        <div class="row">
-            <aside class="col-lg-3">
-                <!-- ============= COMPONENT ============== -->
-                <nav class="sidebar mt-3 card py-2 mb-4">
-                    <ul class="nav flex-column">
-                        <template x-for="category in Container.categories">
-                            <li class="nav-item">
-                                <a @click.prevent="console.log('asdfasfd')" x-bind:href="category.alias" x-text="category.name" class="nav-link"></a>
-                                <ul x-show="category.child" class="submenu dropdown-menu">
-                                    <template x-for="child in category.child">
-                                        <li><a @click.prevent="console.log('asdfasfd')" x-bind:href="child.alias" x-text="child.name" class="nav-link"></a></li>
-                                    </template>
-                                </ul>
-                            </li>
-                        </template>
-                    </ul>
-                </nav>
-
-                <a href="add.html" class="btn btn-primary">Доавить страницу</a>
-                <!-- ============= COMPONENT END// ============== -->
-            </aside>
-            <main class="col-lg-9">
-                <div class="row">
-                    <template x-for="page in Container.pages">
-                        <div class="col-md-6 mt-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 x-text="page.title" class="card-title"></h5>
-                                    <h6 x-text="`Author: ${page?.author?.slug}`" class="card-subtitle mb-2 text-muted"></h6>
-                                    <h6 x-text="`Category: ${page?.category?.name}`" class="card-subtitle mb-2 text-muted"></h6>
-                                    <p x-text="page.body.slice(0, 500).concat('...')" class="card-text"></p>
+                       </form>
+                    </div>
+                </aside>
+                <main class="col-lg-9">
+                    <div class="row">
+                        <template x-for="page in Container.pages">
+                            <div class="col-md-6 mt-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 x-text="page.title" class="card-title"></h5>
+                                        <h6 x-text="`Author: ${page?.author?.slug}`" class="card-subtitle mb-2 text-muted"></h6>
+                                        <h6 x-text="`Category: ${page?.category?.name}`" class="card-subtitle mb-2 text-muted"></h6>
+                                        <p x-text="page.body.slice(0, 500).concat('...')" class="card-text"></p>
+                                    </div>
                                 </div>
                             </div>
+                        </template>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <ul class="pagination">
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <template x-for="page of Container.Paginator.pagesArray">
+                                    <li class="page-item">
+                                        <a :disabled="page.current" @click.prevent="Container.getPages(page.page)"
+                                           :class="page.current&&'current'"
+                                           x-text="page.page"
+                                           class="page-link"
+                                           href="#"></a>
+                                    </li>
+                                </template>
+
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>
+                                </li>
+                            </ul>
                         </div>
-                    </template>
-                </div>
-            </main>
-        </div>
-    </section>
+                    </div>
+                </main>
+            </div>
+        </section>
+    </div>
 
-</div><!-- container //  -->
-
-
-<div style="position: static !important;"></div>
 </body>
-
-<body>
 
 
 <script>
@@ -146,8 +127,10 @@
         PAGES_LIST = "/pages/api/list"
 
         Container = {}
+        Paginator = {}
         categories = []
         pages = []
+        isOpenedSubmitForm = false
 
         constructor() {
             this.Container = this
@@ -155,7 +138,7 @@
 
         initialize() {
             this.getCategories()
-            this.getPages()
+            this.getPages(1)
         }
 
         getCategories() {
@@ -163,9 +146,34 @@
                 .then(res => this.categories = res)
         }
 
-        getPages() {
-            fetch(this.PAGES_LIST).then(res => res.json())
-                .then(res => this.pages = res.result)
+        getPages(page) {
+            let url = this.PAGES_LIST + (page ? `?page=${page}` : '')
+            fetch(url).then(res => res.json())
+                .then(res => {
+                    this.pages = res.result
+                    this.Paginator = new Paginator(res.pagination)
+                })
+        }
+    }
+
+    class Paginator {
+        page
+        pageSize
+        total
+        pagesArray = []
+
+        constructor(pagination) {
+            Object.assign(this, pagination);
+            this.getPagination()
+        }
+
+        getPagination = function() {
+            for (let i = 1; i <= Math.ceil(this.total / this.pageSize); i++) {
+                this.pagesArray.push({
+                    current: i == this.page ?? false,
+                    page: i
+                })
+            }
         }
     }
 
