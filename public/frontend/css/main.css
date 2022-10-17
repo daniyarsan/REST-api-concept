@@ -10,6 +10,7 @@ input::placeholder {
 }
 
 .container {
+    font-family: Helvetica, Neue;
     max-width: 80%;
     color: #6f6f6f;
 }
@@ -38,7 +39,6 @@ input::placeholder {
 }
 
 .editorsBlock {
-    box-shadow: 5px 2px 15px #c4c4c4;
     padding: 20px;
 }
 
