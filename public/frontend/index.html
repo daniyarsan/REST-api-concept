@@ -69,15 +69,28 @@
 
                            <div class="form-group mt-3">
                                <label for="category">Категория</label>
-                               <select name="category" class="form-select" id="category">
-                                   <option value=""></option>
+                               <select @change="Container.getSubcategories()"
+                                       x-model="category"
+                                       name="category"
+                                       class="form-select"
+                                       id="category">
+                                   <option value="">Select Category</option>
+                                   <template x-for="option in Container.categoriesOptions">
+                                       <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                                   </template>
                                </select>
                            </div>
 
                            <div class="form-group mt-3">
                                <label for="subcategory">Подкатегория</label>
-                               <select name="subcategory" class="form-select" id="subcategory">
-                                   <option value=""></option>
+                               <select class="form-select"
+                                       name="subcategory"
+                                       x-model="subcategory"
+                                       id="subcategory">
+                                   <option value="">Select subcategory</option>
+                                   <template x-for="option in Container.subcategoriesOptions">
+                                       <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                                   </template>
                                </select>
                            </div>
 
@@ -165,7 +178,9 @@
     })
 
     class PageController {
-        CAT_LIST = "/category/api/menu"
+        CAT_MENU = "/category/api/menu"
+        CAT_LIST_URL = "/category/api/list"
+        CAT_GET_URL = "/category/api/get"
         PAGES_LIST = "/pages/api/list"
         PAGES_DELETE = "/pages/api/delete"
         PAGES_UPDATE_STATUS = "/pages/api/updateStatus"
@@ -176,6 +191,8 @@
         pageItems = []
         openMenuDropdown = false
         categoriesOptions = [];
+        subcategoriesOptions = [];
+        category = '';
 
         isOpenedSubmitForm = false
         currentPage = localStorage.getItem('currentPage') ?? 1
@@ -183,11 +200,11 @@
 
         initialize() {
             this.fetchPages()
-            this.getCategoriesMenu()
+            this.getFields()
         }
 
         getCategoriesMenu() {
-            fetch(this.CAT_LIST).then(res => res.json())
+            fetch(this.CAT_MENU).then(res => res.json())
                 .then(res => this.categoriesMenuItems = res)
         }
 
@@ -239,6 +256,17 @@
                 .then(res => {
                     this.categoriesOptions = res
                 })
+        }
+
+        getSubcategories() {
+            this.subcategoriesOptions = []
+            if (this.category) {
+                fetch(`${this.CAT_GET_URL}/${this.category}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        this.subcategoriesOptions = res
+                    })
+            }
         }
 
         updateStatus(pageid, status = 'active') {
