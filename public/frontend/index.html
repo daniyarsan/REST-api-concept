@@ -24,18 +24,31 @@
                         <ul class="nav flex-column">
                             <template x-for="category in Container.categoriesMenuItems">
                                 <li class="nav-item">
-                                    <a href="#" @click.prevent="Container.showPagesPerCategory(category.id)" x-text="category.name" class="nav-link"></a>
-                                    <ul x-show="category.child" class="submenu">
-                                        <template x-for="child in category.child">
-                                            <li><a @click.prevent="Container.showPagesPerCategory(child.id)"
-                                                   x-text="child.name"
-                                                   href="#"
-                                                   class="nav-link"></a>
-                                                <span :class="`dot-${child.status}`" class="dot"></span>
-                                            </li>
-                                        </template>
-                                    </ul>
-                                    <span :class="`dot-${category.status}`" x-show="!category.child" class="dot"></span>
+                                    <template x-if="category.child">
+                                        <div>
+                                            <a href="#" @click.prevent="openMenuDropdown = !openMenuDropdown" x-text="category.name" class="nav-link"></a>
+
+                                            <ul x-show="openMenuDropdown" class="submenu">
+                                                <template x-for="child in category.child">
+                                                    <li>
+                                                        <a @click.prevent="Container.showPagesPerCategory(child.id)"
+                                                           x-text="child.name"
+                                                           href="#"
+                                                           class="nav-link"></a>
+                                                        <span :class="`dot-${child.status}`" class="dot"></span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!category.child">
+                                        <div>
+                                            <a href="#" @click.prevent="Container.showPagesPerCategory(category.id)" x-text="category.name" class="nav-link"></a>
+                                            <span :class="`dot-${category.status}`" x-show="!category.child" class="dot"></span>
+                                        </div>
+                                    </template>
+
                                 </li>
                             </template>
 
@@ -54,16 +67,16 @@
                                <input type="text" name="title" class="form-control" id="title">
                            </div>
 
-                           <div class="form-group">
+                           <div class="form-group mt-3">
                                <label for="category">Категория</label>
-                               <select name="category" class="form-control" id="category">
+                               <select name="category" class="form-select" id="category">
                                    <option value=""></option>
                                </select>
                            </div>
 
-                           <div class="form-group">
+                           <div class="form-group mt-3">
                                <label for="subcategory">Подкатегория</label>
-                               <select name="subcategory" class="form-control" id="subcategory">
+                               <select name="subcategory" class="form-select" id="subcategory">
                                    <option value=""></option>
                                </select>
                            </div>
@@ -142,7 +155,6 @@
             </div>
         </section>
     </div>
-
 </body>
 
 <script>
@@ -162,6 +174,8 @@
         Paginator = {}
         categoriesMenuItems = []
         pageItems = []
+        openMenuDropdown = false
+        categoriesOptions = [];
 
         isOpenedSubmitForm = false
         currentPage = localStorage.getItem('currentPage') ?? 1
@@ -184,7 +198,7 @@
         }
 
         showResultsPerPage(page) {
-            this.currentPage = page
+            this.currentPage = page <= 0 ? 1 : page
             localStorage.setItem('currentPage', page)
             this.fetchPages();
         }
@@ -217,6 +231,14 @@
                 method: "POST",
             })
                 .then(res => this.fetchPages())
+        }
+
+        getFields() {
+            fetch(this.CAT_LIST_URL)
+                .then(res => res.json())
+                .then(res => {
+                    this.categoriesOptions = res
+                })
         }
 
         updateStatus(pageid, status = 'active') {

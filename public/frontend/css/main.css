@@ -9,6 +9,13 @@ input::placeholder {
     color: #a0a0a0 !important;
 }
 
+.form-select {
+    background-color: transparent;
+    border-radius: 2px;
+    padding: 10px;
+    color: #808080;
+}
+
 .container {
     font-family: Helvetica, Neue;
     max-width: 80%;
@@ -18,6 +25,7 @@ input::placeholder {
 .form-control {
     color: #6f6f6f !important;
     border-radius: 0px;
+    padding: 10px;
 }
 
 .form-control-transparent {

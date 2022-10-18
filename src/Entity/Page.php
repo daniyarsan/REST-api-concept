@@ -115,6 +115,9 @@ class Page
     public function setStatus(string $status): self
     {
         $this->status = $status;
+        if ($status != 'removed') {
+            $this->setDeletedAt(null);
+        }
 
         return $this;
     }

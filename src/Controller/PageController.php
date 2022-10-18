@@ -110,8 +110,6 @@ class PageController extends AbstractController
         $em->persist($page);
         $em->flush($page);
 
-        $options = [];
-        $status = Response::HTTP_BAD_REQUEST;
         $options['groups'] = 'user';
         $status = Response::HTTP_OK;
 

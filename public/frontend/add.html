@@ -84,7 +84,6 @@
             <div :class="notice.type" class="toast fade show"
                  x-show="Container.notifier.visible.includes(notice)"
                  @click="Container.notifier.remove(notice.id)">
-
                 <div class="toast-header">
                     <strong class="me-auto" x-text="notice.type.capitalize()"><i class="bi-globe"></i></strong>
                     <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
@@ -97,6 +96,7 @@
 
 
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
 <script>
     Object.defineProperty(String.prototype, 'capitalize', {
         value: function() {
