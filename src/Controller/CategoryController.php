@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Category;
+use App\Entity\Page;
 use App\Helper\ListResponseHelper;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,14 +47,16 @@ class CategoryController extends AbstractController
         Request $request,
         ListResponseHelper $listResponseHelper): Response
     {
+        $plainMenu = $this->entityManager->getRepository(Category::class)->getPlainMenu();
 
-        $query = $this->entityManager
-            ->getRepository(Category::class)
-            ->createQueryBuilder('c')
-            ->getQuery();
-        $rawMenu = $query->getResult(Query::HYDRATE_ARRAY);
+        /* HYDRATE menu with statuses */
+        foreach ($plainMenu as $key => $rawMenuItem) {
+            $statusesInCategory = $this->entityManager->getRepository(Page::class)->getMenuStatusByCategoryId($rawMenuItem['id']);
+            $plainMenu[$key]['status'] = end($statusesInCategory);
+        }
 
-        $result = array_reduce($rawMenu, function($agr, $cur) {
+        /* FORMAT multidimensional menu */
+        $result = array_reduce($plainMenu, function($agr, $cur) {
             if ($cur['parentId'] === null) {
                 $agr[] = $cur;
             } else {
@@ -62,7 +65,6 @@ class CategoryController extends AbstractController
                     $agr[$key]['child'][] = $cur;
                 }
             }
-
 
             return $agr;
         });

@@ -14,14 +14,7 @@
 
 <body class="bg-light">
 
-<header class="section-header py-3">
-    <div class="container">
-        <h2>Добавить Страницу</h2>
-    </div>
-</header>
-
-<div x-data="PageController" x-init="Container.getCategories()" class="container pt-3">
-
+<div x-data="PageController" x-init="Container.getFields()" class="container pt-3">
     <div class="row">
         <div class="col-md-3 order-md-2 m-4">
             <div class="form-group">
@@ -53,10 +46,11 @@
             </div>
             <div class="form-group mt-4">
                 <label for="isActive">Статус</label>
-                <select x-model="post.isActive" class="form-select" name="post.isActive" id="isActive">
+                <select x-model="post.status" class="form-select" name="post.status" id="status">
                     <option>Select status</option>
-                    <option value="1">Опубликовать</option>
-                    <option value="0">Черновик</option>
+                    <template x-for="option in Container.statusesOptions">
+                        <option :value="option" x-text="option.capitalize()"></option>
+                    </template>
                 </select>
             </div>
 
@@ -121,13 +115,15 @@
         /* API endpoints */
         CREATE_URL = "/pages/api/create"
         CAT_LIST_URL = "/category/api/list"
-        CAT_GET_URL = "/category/api/get/"
+        CAT_GET_URL = "/category/api/get"
+        STATUSES_GET_URL = "/pages/api/statuses"
 
         Container = {}
         post = {}
         category = '';
         categoriesOptions = [];
         subcategoriesOptions = [];
+        statusesOptions = [];
 
         constructor() {
             this.Container = this
@@ -138,18 +134,24 @@
             this.post.body = body
         }
 
-        getCategories() {
+        getFields() {
             fetch(this.CAT_LIST_URL)
                 .then(res => res.json())
                 .then(res => {
                     this.categoriesOptions = res
+                })
+
+            fetch(this.STATUSES_GET_URL)
+                .then(res => res.json())
+                .then(res => {
+                    this.statusesOptions = res
                 })
         }
 
         getSubcategories() {
             this.subcategoriesOptions = []
             if (this.category) {
-                fetch(`${this.CAT_GET_URL}${this.category}`)
+                fetch(`${this.CAT_GET_URL}/${this.category}`)
                     .then(res => res.json())
                     .then(res => {
                         this.subcategoriesOptions = res
@@ -163,7 +165,7 @@
                     'Content-Type': 'application/json;charset=utf-8'
                 },
                 body: JSON.stringify(this.post),
-                method: "POST",
+                method: "POST"
             })
                 .then((res) => res.json())
                 .then((res) => {
@@ -174,6 +176,7 @@
                         this.post = {};
                         var element = document.getElementsByClassName("ql-editor");
                         element[0].innerHTML = "";
+                        /*************/
                     } else {
                         this.categories = []
                         this.categories = ''

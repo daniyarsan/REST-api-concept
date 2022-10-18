@@ -48,8 +48,12 @@ class PageRepository extends ServiceEntityRepository
      * @param Request $request
      * @return QueryBuilder
      */
-    public function getPageQuery(Request $request): QueryBuilder
+    public function getPageQuery(Request $request, $showRemoved = false): QueryBuilder
     {
+        if ($showRemoved) {
+            $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        }
+
         $filters = $request->get('filter', []);
 
         $query = $this->createQueryBuilder('p')
@@ -60,13 +64,30 @@ class PageRepository extends ServiceEntityRepository
             $query->andWhere('p.id = :id')
                 ->setParameter('id', $filters['id']);
         }
-
         if (isset($filters['title']) && $filters['title']) {
             $query->andWhere('LOWER(p.title) LIKE :title')
                 ->setParameter('title', '%'.mb_strtolower($filters['title']).'%');
         }
+
+        if (isset($filters['category']) && $filters['category']) {
+            $query->andWhere('pc.id = :id')
+                ->setParameter('id', $filters['category']);
+            $query->orWhere('pc.parentId = :parentId')
+                ->setParameter('parentId', $filters['category']);
+        }
+
         $query->orderBy('p.id', 'desc');
 
         return $query;
+    }
+
+    public function getMenuStatusByCategoryId(int $categoryId) {
+        $query = $this->createQueryBuilder('p')
+            ->leftJoin('p.category', 'pc')
+            ->select( 'p.status')
+            ->groupBy('p.status')
+            ->where('pc.id = :id')->setParameter('id', $categoryId);
+
+        return $query->getQuery()->getSingleColumnResult();
     }
 }

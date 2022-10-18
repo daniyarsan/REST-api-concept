@@ -17,27 +17,9 @@ class PageType extends AbstractType
         $builder
             ->add('title')
             ->add('body')
-            ->add('authorName', TextType::class, [
-                'constraints' => array(
-                    new NotBlank(['message' => 'Your error message']),
-                )
-            ])
-            ->add('isActive')
+            ->add('authorName', TextType::class, ['mapped' => false])
+            ->add('status')
             ->add('category');
-
-        $builder->get('isActive')
-            ->addModelTransformer(new CallbackTransformer(
-                function ($property) {
-                    dd($property);
-
-                    return (string) $property;
-                },
-                function ($property) {
-                    dd($property);
-
-                    return (bool) $property;
-                }
-            ));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

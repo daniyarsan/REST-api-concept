@@ -28,13 +28,14 @@ class PageUpdater
 
     public function update(Request $request, Page $page)
     {
-        $this->serializer
+        $page = $this->serializer
             ->deserialize(
                 $request->getContent(),
                 Page::class,
                 'json',
                 [AbstractNormalizer::OBJECT_TO_POPULATE => $page]
             );
+
 
         $errors = $this->validator->validate($page);
 

@@ -28,9 +28,12 @@ class PageDeleter
 
     public function delete(Page $page)
     {
-        $this->entityManager->remove($page);
+        $page->setStatus(Page::STATUS_REMOVED);
+        $this->entityManager->persist($page);
         $this->entityManager->flush();
 
+        $this->entityManager->remove($page);
+        $this->entityManager->flush();
 
         return $page;
     }

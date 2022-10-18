@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Category;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,6 +100,11 @@ class CategoryRepository extends ServiceEntityRepository
         $query->andWhere('c.parentId = :id')->setParameter('id', $id);
 
         return $query->getQuery()->getResult();
+    }
+
+    public function getPlainMenu()
+    {
+        return $this->createQueryBuilder('c')->getQuery()->getResult(Query::HYDRATE_ARRAY);
     }
 
 }

@@ -9,6 +9,7 @@ use App\Entity\Page;
 use App\Helper\ExceptionHandlingHelper;
 use App\Helper\ListResponseHelper;
 use App\Repository\PageRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,8 +34,7 @@ class PageController extends AbstractController
         Request $request,
         ListResponseHelper $listResponseHelper): Response
     {
-
-        $query = $this->pages->getPageQuery($request);
+        $query = $this->pages->getPageQuery($request, true);
 
         return $listResponseHelper->getResponse($request, $query, 'user');
     }
@@ -72,7 +72,7 @@ class PageController extends AbstractController
         );
     }
 
-    #[Route('/update/{id}', name: 'update', methods: ["POST"])]
+    #[Route('/update/{page}', name: 'update', methods: ["POST"])]
     #[ParamConverter('page', Page::class)]
     public function update(
         Page $page,
@@ -96,11 +96,36 @@ class PageController extends AbstractController
         );
     }
 
+    #[Route('/updateStatus/{id}', name: 'update', methods: ["POST"])]
+    public function updateStatus(
+        $id,
+        Request $request,
+        EntityManagerInterface $em,
+        PageUpdater $pageUpdater): Response
+    {
+        $em->getFilters()->disable('softdeleteable');
+        $page = $em->getRepository(Page::class)->findOneBy(['id' => $id]);
+
+        $page->setStatus($request->getContent());
+        $em->persist($page);
+        $em->flush($page);
+
+        $options = [];
+        $status = Response::HTTP_BAD_REQUEST;
+        $options['groups'] = 'user';
+        $status = Response::HTTP_OK;
+
+        return $this->json(
+            $page,
+            $status,
+            [],
+            $options
+        );
+    }
+
     #[Route('/delete/{id}', name: 'delete', methods: ["POST"])]
     #[ParamConverter('page', Page::class)]
-    public function delete(
-        Page $page,
-        PageDeleter $pageDeleter): Response
+    public function delete(Page $page, PageDeleter $pageDeleter): Response
     {
         try{
             $pageDeleter->delete($page);
@@ -112,6 +137,22 @@ class PageController extends AbstractController
             [],
             Response::HTTP_NO_CONTENT,
             []
+        );
+    }
+
+    #[Route('/statuses', name: 'statuses', methods: ["GET"])]
+    public function getStatuses()
+    {
+        return $this->json(
+            [
+                Page::STATUS_ACTIVE,
+                Page::STATUS_MODERATION,
+                Page::STATUS_REMOVED,
+                Page::STATUS_HIDDEN
+            ],
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'user']
         );
     }
 }
