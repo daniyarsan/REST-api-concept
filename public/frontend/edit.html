@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Document</title>
+    <script defer src="https://unpkg.com/@colinaut/alpinejs-plugin-simple-validate@1/dist/alpine.validate.min.js"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="./css/main.css" rel="stylesheet"/>
+</head>
+
+<body class="bg-light">
+
+<div x-data="PageController" x-init="Container.initialize()" class="container pt-3">
+    <div class="row">
+        <div class="col-md-3 order-md-2 m-4">
+            <div class="form-group">
+                <label for="category">Категория</label>
+                <select @change="Container.getSubcategories()"
+                        x-model="category"
+                        class="form-select"
+                        name="category"
+                        id="category">
+                    <option value="">Select category</option>
+                    <template x-for="option in Container.categoriesOptions">
+                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="form-group mt-4">
+                <label for="subcategory">Подкатегория</label>
+                <select @change="Container.post.categoryId = Container.subcategory || Container.category"
+                        x-model="subcategory"
+                        class="form-select"
+                        name="subcategory"
+                        id="subcategory">
+                    <option value="">Select subcategory</option>
+                    <template x-for="option in Container.subcategoriesOptions">
+                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                    </template>
+                </select>
+            </div>
+            <div class="form-group mt-4">
+                <label for="status">Статус</label>
+                <select x-model="post.status" class="form-select" name="post.status" id="status">
+                    <option>Select status</option>
+                    <template x-for="option in Container.statusesOptions">
+                        <option :value="option" x-text="option.capitalize()"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="form-group mt-4">
+                <button @click="Container.submit" class="btn btn-primary w-100">Сохранить</button>
+            </div>
+        </div>
+
+        <div class="col-md-8 order-md-1 editorsBlock">
+            <div class="d-flex flex-column">
+                <input x-model="post.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
+                <input x-model="post.authorName" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
+
+                <div class="mt-2" wire:ignore>
+                    <div x-ref="quillEditor"
+                         x-init="
+                                quill = new Quill($refs.quillEditor, {placeholder: 'Write something great...',theme: 'bubble'});
+                                quill.on('text-change', function () {
+                                $dispatch('input', Container.setBody(quill.root.innerHTML));
+                                });"
+                         wire:model.debounce.2000ms="description">
+                        <p class="lead"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container">
+        <template x-for="notice of Container.notifier.notices" :key="notice.id">
+            <div :class="notice.type" class="toast fade show"
+                 x-show="Container.notifier.visible.includes(notice)"
+                 @click="Container.notifier.remove(notice.id)">
+                <div class="toast-header">
+                    <strong class="me-auto" x-text="notice.type.capitalize()"><i class="bi-globe"></i></strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div x-text="notice.text" class="toast-body"></div>
+            </div>
+        </template>
+    </div>
+</div>
+
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+<script>
+    Object.defineProperty(String.prototype, 'capitalize', {
+        value: function() {
+            return this.charAt(0).toUpperCase() + this.slice(1);
+        },
+        enumerable: false
+    });
+
+    document.addEventListener("alpine:init", () => {
+        Alpine.data("PageController", () => {
+            return new PageController()
+        })
+    })
+
+    class PageController {
+        pageId = new URLSearchParams(location.search).get('id')
+
+        /* API endpoints */
+        PAGE_CREATE_URL = "/pages/api/create"
+        PAGE_GET_URL = "/pages/api/get"
+        CAT_LIST_URL = "/category/api/list"
+        CAT_GET_URL = "/category/api/get"
+        STATUSES_GET_URL = "/pages/api/statuses"
+
+        Container = {}
+        post = {}
+        category = '';
+        categoriesOptions = [];
+        subcategoriesOptions = [];
+        statusesOptions = [];
+
+        constructor() {
+            this.Container = this
+            this.notifier = new NoticeHandler()
+        }
+
+        initialize() {
+            this.getFields()
+            this.getData()
+        }
+
+        getFields() {
+            fetch(this.CAT_LIST_URL)
+                .then(res => res.json())
+                .then(res => {
+                    this.categoriesOptions = res
+                })
+
+            fetch(this.STATUSES_GET_URL)
+                .then(res => res.json())
+                .then(res => {
+                    this.statusesOptions = res
+                })
+        }
+
+        getSubcategories() {
+            this.subcategoriesOptions = []
+            if (this.category) {
+                fetch(`${this.CAT_GET_URL}/${this.category}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        this.subcategoriesOptions = res
+                    })
+            }
+        }
+
+        getData() {
+            fetch(`${this.PAGE_GET_URL}/${this.pageId}`)
+                .then(res => res.json())
+                .then(res => {
+                    this.post = res
+                    document.querySelector(".ql-editor").innerHTML = this.post.body;
+                    console.log(this.post)
+
+
+                })
+        }
+
+        submit() {
+            fetch(this.PAGE_CREATE_URL, {
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(this.post),
+                method: "POST"
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    if (res.id) {
+                        this.notifier.add({type: 'success', text: 'Page is created'});
+
+                        /* RESET FORM */
+                        this.post = {};
+                        var element = document.getElementsByClassName("ql-editor");
+                        element[0].innerHTML = "";
+                        /*************/
+                    } else {
+                        this.categories = []
+                        this.categories = ''
+                        this.categories = false
+
+                        Object.keys(res).forEach((key, index) => {
+                            this.notifier.add({type: 'error', text: `'${key.capitalize()}' - ${res[key]}`});
+                        });
+                    }
+
+                })
+        }
+
+        setBody(body) {
+            this.post.body = body
+        }
+
+
+    }
+
+    class NoticeHandler {
+        notices = []
+        visible = []
+
+        add = function (notice) {
+            notice.id = Math.random()
+            this.notices.push(notice)
+            console.log(this.notices)
+            this.fire(notice.id)
+        }
+
+        fire = function(id) {
+            this.visible.push(this.notices.find(notice => notice.id == id))
+            const timeShown = 2000 * this.visible.length
+            setTimeout(() => {
+                this.remove(id)
+            }, timeShown)
+        }
+
+        remove = function(id) {
+            const notice = this.visible.find(notice => notice.id == id)
+            const index = this.visible.indexOf(notice)
+            this.visible.splice(index, 1)
+        }
+    }
+
+
+</script>
+</body>
+</html>
