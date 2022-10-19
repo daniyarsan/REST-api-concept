@@ -33,7 +33,7 @@ class Page
     #[Assert\NotBlank]
     protected ?string $title = null;
 
-    #[ORM\ManyToOne(inversedBy: 'pages')]
+    #[ORM\ManyToOne(inversedBy: 'pages', cascade: ["persist"])]
     #[Groups(['user'])]
     #[Assert\NotBlank]
     private ?Author $author = null;

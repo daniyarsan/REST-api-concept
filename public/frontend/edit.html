@@ -18,12 +18,11 @@
     <div class="row">
         <div class="col-md-3 order-md-2 m-4">
             <div class="form-group">
-                <label for="category">Категория</label>
+                <label>Категория</label>
                 <select @change="Container.getSubcategories()"
-                        x-model="category"
+                        x-model="this.post.category.main"
                         class="form-select"
-                        name="category"
-                        id="category">
+                        name="category">
                     <option value="">Select category</option>
                     <template x-for="option in Container.categoriesOptions">
                         <option :key="option.id" :value="option.id" x-text="option.name"></option>
@@ -32,12 +31,11 @@
             </div>
 
             <div class="form-group mt-4">
-                <label for="subcategory">Подкатегория</label>
+                <label>Подкатегория</label>
                 <select @change="Container.post.categoryId = Container.subcategory || Container.category"
-                        x-model="subcategory"
+                        x-model="Container.subcategory"
                         class="form-select"
-                        name="subcategory"
-                        id="subcategory">
+                        name="subcategory">
                     <option value="">Select subcategory</option>
                     <template x-for="option in Container.subcategoriesOptions">
                         <option :key="option.id" :value="option.id" x-text="option.name"></option>
@@ -62,7 +60,7 @@
         <div class="col-md-8 order-md-1 editorsBlock">
             <div class="d-flex flex-column">
                 <input x-model="post.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
-                <input x-model="post.authorName" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
+                <input x-model="post.author" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
 
                 <div class="mt-2" wire:ignore>
                     <div x-ref="quillEditor"
@@ -115,7 +113,7 @@
         pageId = new URLSearchParams(location.search).get('id')
 
         /* API endpoints */
-        PAGE_CREATE_URL = "/pages/api/create"
+        PAGE_UPDATE_URL = "/pages/api/update"
         PAGE_GET_URL = "/pages/api/get"
         CAT_LIST_URL = "/category/api/list"
         CAT_GET_URL = "/category/api/get"
@@ -123,7 +121,7 @@
 
         Container = {}
         post = {}
-        category = '';
+        category;
         categoriesOptions = [];
         subcategoriesOptions = [];
         statusesOptions = [];
@@ -168,15 +166,19 @@
                 .then(res => res.json())
                 .then(res => {
                     this.post = res
-                    document.querySelector(".ql-editor").innerHTML = this.post.body;
-                    console.log(this.post)
+                    document.querySelector(".ql-editor").innerHTML = this.post.body
 
-
+                    // if(this.categoriesOptions.find(item => item.id == this.post.category)) {
+                    //     this.category = this.post.category
+                    // } else {
+                    //     this.category = 1
+                    //     this.subcategory = this.post.category
+                    // }
                 })
         }
 
         submit() {
-            fetch(this.PAGE_CREATE_URL, {
+            fetch(`${this.PAGE_UPDATE_URL}/${this.pageId}`, {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
                 },
@@ -187,12 +189,6 @@
                 .then((res) => {
                     if (res.id) {
                         this.notifier.add({type: 'success', text: 'Page is created'});
-
-                        /* RESET FORM */
-                        this.post = {};
-                        var element = document.getElementsByClassName("ql-editor");
-                        element[0].innerHTML = "";
-                        /*************/
                     } else {
                         this.categories = []
                         this.categories = ''

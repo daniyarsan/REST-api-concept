@@ -72,8 +72,8 @@ class PageController extends AbstractController
         );
     }
 
-    #[Route('/update/{page}', name: 'update', methods: ["POST"])]
-    #[ParamConverter('page', Page::class)]
+    #[Route('/update/{id}', name: 'update', methods: ["POST"])]
+    #[ParamConverter('id', Page::class)]
     public function update(
         Page $page,
         Request $request,
@@ -96,7 +96,7 @@ class PageController extends AbstractController
         );
     }
 
-    #[Route('/updateStatus/{id}', name: 'update', methods: ["POST"])]
+    #[Route('/updateStatus/{id}', name: 'update_status', methods: ["POST"])]
     public function updateStatus(
         $id,
         Request $request,

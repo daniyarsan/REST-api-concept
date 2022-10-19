@@ -6,9 +6,12 @@ use App\Repository\AuthorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AuthorRepository::class)]
+
 class Author
 {
     use TimestampableTrait;
@@ -18,11 +21,12 @@ class Author
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, )]
+    #[ORM\Column(length: 255)]
     #[Groups(['user'])]
+    #[Gedmo\Slug(fields: ['firstName'])]
     private ?string $slug = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $firstName = null;
 
     #[ORM\Column(nullable: true)]
@@ -113,6 +117,6 @@ class Author
 
     public function __toString()
     {
-        return $this->firstName . ' ' . $this->lastname;
+        return $this->slug;
     }
 }

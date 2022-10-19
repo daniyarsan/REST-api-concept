@@ -36,7 +36,6 @@ class PageUpdater
                 [AbstractNormalizer::OBJECT_TO_POPULATE => $page]
             );
 
-
         $errors = $this->validator->validate($page);
 
         if (count($errors) > 0) {

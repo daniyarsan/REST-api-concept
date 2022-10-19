@@ -22,23 +22,14 @@ class PageNormalizer implements NormalizerInterface, CacheableSupportsMethodInte
         };
 
         $data = $this->normalizer->normalize($topic, $format, $context);
-        if (is_array($data) && isset($data['author'])) {
-            $data['authorName'] = $data['author']['slug'];
-        }
-        if (is_array($data) && isset($data['author'])) {
-            $data['authorName'] = $data['author']['slug'];
-        }
 
         if (is_array($data) && isset($context['groups']) && $context['groups'] == 'user') {
             if ($topic->getCategory()) {
-                $data['category'] = [
-                    'id'       => $topic->getCategory()->getId(),
-                    'name'    => $topic->getCategory()->getName(),
-                    'alias'    => $topic->getCategory()->getAlias(),
-                    'parent_id'    => $topic->getCategory()->getParentId(),
-                ];
+                $data['category'] = $topic->getCategory()->getId();
             }
-
+            if ($topic->getAuthor()) {
+                $data['author'] = $topic->getAuthor()->getSlug();
+            }
         }
 
         return $data;
