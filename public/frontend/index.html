@@ -27,7 +27,6 @@
                                     <template x-if="category.child">
                                         <div>
                                             <a href="#" @click.prevent="openMenuDropdown = !openMenuDropdown" x-text="category.name" class="nav-link"></a>
-
                                             <ul x-show="openMenuDropdown" class="submenu">
                                                 <template x-for="child in category.child">
                                                     <li>
@@ -98,8 +97,8 @@
                                 <div class="card page-card">
                                     <div class="card-body">
                                         <h5 x-text="page.title" class="card-title"></h5>
-                                        <h6 x-text="`Author: ${page?.author?.slug}`" class="card-subtitle mb-2 text-muted"></h6>
-                                        <h6 x-text="`Category: ${page?.category?.name}`" class="card-subtitle mb-2 text-muted"></h6>
+                                        <h6 x-text="`Author: ${page?.author}`" class="card-subtitle mb-2 text-muted"></h6>
+                                        <h6 x-text="`Category: ${categoriesList.find(item => item.id == page.category).name}`" class="card-subtitle mb-2 text-muted"></h6>
                                         <p x-text="page.body.replace(/(<([^>]+)>)/gi, '').slice(0, 250).concat('...')" class="card-text"></p>
                                     </div>
                                     <span class="dot" :class="'dot-' + page.status"></span>
@@ -116,6 +115,7 @@
                                             <button x-show="page.status != 'active'" @click="Container.updateStatus(page.id, 'active')" class="dropdown-item">Activate</button>
                                             <button x-show="page.status != 'hidden' && page.status != 'removed'" @click="Container.updateStatus(page.id, 'hidden')" class="dropdown-item">Hide</button>
                                             <button x-show="page.status != 'moderation' && page.status != 'removed'" @click="Container.updateStatus(page.id, 'moderation')" class="dropdown-item">To moderation</button>
+                                            <button @click="window.location.href=`edit.html?id=${page.id}`" class="dropdown-item">Edit</button>
                                             <button x-show="page.status != 'removed'" @click="Container.deleteRecord(page)" class="dropdown-item">Delete</button>
                                         </div>
                                     </div>
@@ -184,12 +184,12 @@
         pageItems = []
         openMenuDropdown = false
         isOpenedSubmitForm = false
-
         currentPage = localStorage.getItem('currentPage') ?? 1
         currentCategory = localStorage.getItem('currentCategory') ?? false
 
         initialize() {
             this.fetchPages()
+
             fetch(this.CAT_LIST_GET)
                 .then(res => res.json())
                 .then(res => {
@@ -223,7 +223,6 @@
             let url = this.PAGES_LIST_GET+'?'+ urlParts.join('&')
             fetch(url).then(res => res.json())
                 .then(res => {
-                    /* If page doesnt show results -> move to first page */
                     if (res.result.length === 0 && res.pagination.total > 0) {
                         localStorage.removeItem('currentPage');
                         this.currentPage = 1;
