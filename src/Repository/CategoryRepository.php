@@ -52,15 +52,12 @@ class CategoryRepository extends ServiceEntityRepository
 
         $query = $this->createQueryBuilder('c');
 
-
         if (isset($filters['id']) && $filters['id']) {
-            $query->andWhere('p.id = :id')
-                ->setParameter('id', $filters['id']);
+            $query->andWhere('p.id = :id')->setParameter('id', $filters['id']);
         }
 
         if (isset($filters['name']) && $filters['name']) {
-            $query->andWhere('LOWER(p.name) LIKE :name')
-                ->setParameter('name', '%'.mb_strtolower($filters['name']).'%');
+            $query->andWhere('LOWER(p.name) LIKE :name')->setParameter('name', '%'.mb_strtolower($filters['name']).'%');
         }
 
         return $query;
@@ -69,23 +66,14 @@ class CategoryRepository extends ServiceEntityRepository
     /**
      * @return int|mixed|string
      */
-    public function findCategories()
+    public function findFirstLevelCategories(): mixed
     {
         $query = $this->createQueryBuilder('c');
-
         $query->andWhere('c.parentId is null');
 
         return $query->getQuery()->getResult();
     }
 
-    public function findSubCategories()
-    {
-        $query = $this->createQueryBuilder('c');
-
-        $query->andWhere('c.parentId is not null');
-
-        return $query->getQuery()->getResult();
-    }
 
     /**
      * @param int $id

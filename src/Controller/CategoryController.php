@@ -32,10 +32,8 @@ class CategoryController extends AbstractController
         ListResponseHelper $listResponseHelper): Response
     {
 
-        $categories = $this->entityManager->getRepository(Category::class)->findCategories();
-
         return $this->json(
-            $categories,
+            $this->entityManager->getRepository(Category::class)->findAll(),
             Response::HTTP_OK,
             [],
             ['groups' => 'user']
@@ -55,7 +53,7 @@ class CategoryController extends AbstractController
             $plainMenu[$key]['status'] = end($statusesInCategory);
         }
 
-        /* FORMAT multidimensional menu */
+        /* FORMAT multidimensional categories list */
         $result = array_reduce($plainMenu, function($agr, $cur) {
             if ($cur['parentId'] === null) {
                 $agr[] = $cur;
@@ -78,16 +76,16 @@ class CategoryController extends AbstractController
         );
     }
 
-    #[Route('/get/{id}', name: 'get', methods: ["GET"])]
-    public function get($id): Response
-    {
-        $categories = $this->entityManager->getRepository(Category::class)->findSubcategoriesByCategory($id);
-
-        return $this->json(
-            $categories,
-            Response::HTTP_OK,
-            [],
-            ['groups' => 'user']
-        );
-    }
+//    #[Route('/get/{id}', name: 'get', methods: ["GET"])]
+//    public function get($id): Response
+//    {
+//        $categories = $this->entityManager->getRepository(Category::class)->findSubcategoriesByCategory($id);
+//
+//        return $this->json(
+//            $categories,
+//            Response::HTTP_OK,
+//            [],
+//            ['groups' => 'user']
+//        );
+//    }
 }

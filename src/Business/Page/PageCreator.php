@@ -5,9 +5,11 @@ namespace App\Business\Page;
 
 
 use App\Entity\Page;
+use App\Form\PageType;
 use App\Service\Util;
 use App\Traits\ErrorTrait;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -20,7 +22,8 @@ class PageCreator
     public function __construct(
         private SerializerInterface $serializer,
         private ValidatorInterface $validator,
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
+        private FormFactoryInterface $formFactory,
         private Util $util,
     )
     {}
@@ -41,8 +44,13 @@ class PageCreator
             return $this->prepareErrorResponse($errors);
         }
 
-        $this->em->persist($page);
-        $this->em->flush();
+        $data = json_decode($request->getContent(), true);
+        $form = $this->formFactory->create(PageType::class, $page);
+        $form->submit($data, false);
+        $page = $form->getData();
+
+        $this->entityManager->persist($page);
+        $this->entityManager->flush();
 
         return $page;
     }

@@ -17,34 +17,29 @@
 <div x-data="PageController" x-init="Container.initialize()" class="container pt-3">
     <div class="row">
         <div class="col-md-3 order-md-2 m-4">
+
             <div class="form-group">
                 <label>Категория</label>
-                <select @change="Container.getSubcategories()"
-                        x-model="this.post.category.main"
-                        class="form-select"
-                        name="category">
-                    <option value="">Select category</option>
+                <select x-on:change="Container.onCategoriesChange($event.target.value)" class="form-select">
+                    <option>Select category</option>
                     <template x-for="option in Container.categoriesOptions">
-                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                        <option :selected="option.selected === true" :value="option.id" x-text="option.name"></option>
+                    </template>
+                </select>
+            </div>
+            <div class="form-group mt-4">
+                <label>Подкатегория</label>
+                <select x-on:change="Container.onSubcategoriesChange($event.target.value)" class="form-select">
+                    <option>Select subcategory</option>
+                    <template x-for="option in Container.subcategoriesOptions">
+                        <option :selected="option.selected === true" :value="option.id" x-text="option.name"></option>
                     </template>
                 </select>
             </div>
 
             <div class="form-group mt-4">
-                <label>Подкатегория</label>
-                <select @change="Container.post.categoryId = Container.subcategory || Container.category"
-                        x-model="Container.subcategory"
-                        class="form-select"
-                        name="subcategory">
-                    <option value="">Select subcategory</option>
-                    <template x-for="option in Container.subcategoriesOptions">
-                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
-                    </template>
-                </select>
-            </div>
-            <div class="form-group mt-4">
                 <label for="status">Статус</label>
-                <select x-model="post.status" class="form-select" name="post.status" id="status">
+                <select x-model="data.status" class="form-select" name="data.status" id="status">
                     <option>Select status</option>
                     <template x-for="option in Container.statusesOptions">
                         <option :value="option" x-text="option.capitalize()"></option>
@@ -59,15 +54,14 @@
 
         <div class="col-md-8 order-md-1 editorsBlock">
             <div class="d-flex flex-column">
-                <input x-model="post.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
-                <input x-model="post.author" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
-
+                <input x-model="data.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
+                <input x-model="data.author" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
                 <div class="mt-2" wire:ignore>
                     <div x-ref="quillEditor"
                          x-init="
                                 quill = new Quill($refs.quillEditor, {placeholder: 'Write something great...',theme: 'bubble'});
                                 quill.on('text-change', function () {
-                                $dispatch('input', Container.setBody(quill.root.innerHTML));
+                                $dispatch('input', Container.onBodyInput(quill.root.innerHTML));
                                 });"
                          wire:model.debounce.2000ms="description">
                         <p class="lead"></p>
@@ -92,12 +86,11 @@
     </div>
 </div>
 
-
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
 <script>
     Object.defineProperty(String.prototype, 'capitalize', {
-        value: function() {
+        value: function () {
             return this.charAt(0).toUpperCase() + this.slice(1);
         },
         enumerable: false
@@ -110,79 +103,76 @@
     })
 
     class PageController {
+        Container = this
+        notifier = new NoticeHandler()
         pageId = new URLSearchParams(location.search).get('id')
 
         /* API endpoints */
         PAGE_UPDATE_URL = "/pages/api/update"
-        PAGE_GET_URL = "/pages/api/get"
-        CAT_LIST_URL = "/category/api/list"
-        CAT_GET_URL = "/category/api/get"
+        CAT_LIST_GET = "/category/api/list"
         STATUSES_GET_URL = "/pages/api/statuses"
+        PAGE_GET_URL = "/pages/api/get"
 
-        Container = {}
-        post = {}
-        category;
-        categoriesOptions = [];
-        subcategoriesOptions = [];
-        statusesOptions = [];
-
-        constructor() {
-            this.Container = this
-            this.notifier = new NoticeHandler()
-        }
+        data = {}
 
         initialize() {
-            this.getFields()
-            this.getData()
-        }
-
-        getFields() {
-            fetch(this.CAT_LIST_URL)
+            fetch(this.CAT_LIST_GET)
                 .then(res => res.json())
                 .then(res => {
-                    this.categoriesOptions = res
+                    this.categoriesList = res
                 })
-
             fetch(this.STATUSES_GET_URL)
                 .then(res => res.json())
                 .then(res => {
                     this.statusesOptions = res
                 })
-        }
 
-        getSubcategories() {
-            this.subcategoriesOptions = []
-            if (this.category) {
-                fetch(`${this.CAT_GET_URL}/${this.category}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        this.subcategoriesOptions = res
-                    })
-            }
-        }
-
-        getData() {
+            /* Get Edit data */
             fetch(`${this.PAGE_GET_URL}/${this.pageId}`)
                 .then(res => res.json())
                 .then(res => {
-                    this.post = res
-                    document.querySelector(".ql-editor").innerHTML = this.post.body
-
-                    // if(this.categoriesOptions.find(item => item.id == this.post.category)) {
-                    //     this.category = this.post.category
-                    // } else {
-                    //     this.category = 1
-                    //     this.subcategory = this.post.category
-                    // }
+                    this.data = res
+                    document.querySelector(".ql-editor").innerHTML = this.data.body
+                    this.makeSelected(this.data.category)
                 })
+        }
+
+        onCategoriesChange (categoryId) {
+            this.data.category = categoryId
+            this.renderCategories(categoryId)
+        }
+        onSubcategoriesChange (categoryId) {
+            this.data.category = categoryId
+        }
+
+        renderCategories (categoryId) {
+            this.categoriesOptions = this.categoriesList.filter(item => {
+                return item.parentId == null
+            })
+            if (categoryId) {
+                this.subcategoriesOptions = this.categoriesList.filter(item => {
+                    return item.parentId == categoryId
+                })
+            }
+        }
+
+        makeSelected(categoryId) {
+            let categoryItem = this.categoriesList.find(row => row.id == categoryId)
+            categoryItem['selected'] = true
+            Object.assign(this.categoriesList, categoryItem);
+
+            if(categoryItem.parentId) {
+                let parentItem = this.categoriesList.find(row => row.id == categoryItem.parentId)
+                parentItem['selected'] = true
+                Object.assign(this.categoriesList, parentItem);
+            }
+            this.renderCategories(categoryItem.parentId)
         }
 
         submit() {
             fetch(`${this.PAGE_UPDATE_URL}/${this.pageId}`, {
-                headers: {
-                    'Content-Type': 'application/json;charset=utf-8'
-                },
-                body: JSON.stringify(this.post),
+                headers: {'Content-Type': 'application/json;charset=utf-8'},
+                body: JSON.stringify(this.data),
                 method: "POST"
             })
                 .then((res) => res.json())
@@ -190,10 +180,6 @@
                     if (res.id) {
                         this.notifier.add({type: 'success', text: 'Page is created'});
                     } else {
-                        this.categories = []
-                        this.categories = ''
-                        this.categories = false
-
                         Object.keys(res).forEach((key, index) => {
                             this.notifier.add({type: 'error', text: `'${key.capitalize()}' - ${res[key]}`});
                         });
@@ -202,11 +188,9 @@
                 })
         }
 
-        setBody(body) {
-            this.post.body = body
+        onBodyInput(body) {
+            this.data.body = body
         }
-
-
     }
 
     class NoticeHandler {
@@ -220,7 +204,7 @@
             this.fire(notice.id)
         }
 
-        fire = function(id) {
+        fire = function (id) {
             this.visible.push(this.notices.find(notice => notice.id == id))
             const timeShown = 2000 * this.visible.length
             setTimeout(() => {
@@ -228,13 +212,12 @@
             }, timeShown)
         }
 
-        remove = function(id) {
+        remove = function (id) {
             const notice = this.visible.find(notice => notice.id == id)
             const index = this.visible.indexOf(notice)
             this.visible.splice(index, 1)
         }
     }
-
 
 </script>
 </body>

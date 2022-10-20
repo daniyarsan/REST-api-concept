@@ -14,39 +14,30 @@
 
 <body class="bg-light">
 
-<div x-data="PageController" x-init="Container.getFields()" class="container pt-3">
+<div x-data="PageController" x-init="Container.initialize()" class="container pt-3">
     <div class="row">
         <div class="col-md-3 order-md-2 m-4">
             <div class="form-group">
-                <label for="category">Категория</label>
-                <select @change="Container.getSubcategories()"
-                        x-model="category"
-                        class="form-select"
-                        name="category"
-                        id="category">
-                    <option value="">Select category</option>
+                <label>Категория</label>
+                <select x-on:change="Container.onCategoriesChange($event.target.value)" class="form-select">
+                    <option>Select category</option>
                     <template x-for="option in Container.categoriesOptions">
-                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                        <option :selected="option.selected === true" :value="option.id" x-text="option.name"></option>
                     </template>
                 </select>
             </div>
-
             <div class="form-group mt-4">
-                <label for="subcategory">Подкатегория</label>
-                <select @change="Container.post.categoryId = Container.subcategory || Container.category"
-                        x-model="subcategory"
-                        class="form-select"
-                        name="subcategory"
-                        id="subcategory">
-                    <option value="">Select subcategory</option>
+                <label>Подкатегория</label>
+                <select x-on:change="Container.onSubcategoriesChange($event.target.value)" class="form-select">
+                    <option>Select subcategory</option>
                     <template x-for="option in Container.subcategoriesOptions">
-                        <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                        <option :selected="option.selected === true" :value="option.id" x-text="option.name"></option>
                     </template>
                 </select>
             </div>
             <div class="form-group mt-4">
-                <label for="isActive">Статус</label>
-                <select x-model="post.status" class="form-select" name="post.status" id="status">
+                <label for="status">Статус</label>
+                <select x-model="data.status" class="form-select" name="data.status" id="status">
                     <option>Select status</option>
                     <template x-for="option in Container.statusesOptions">
                         <option :value="option" x-text="option.capitalize()"></option>
@@ -61,15 +52,14 @@
 
         <div class="col-md-8 order-md-1 editorsBlock">
             <div class="d-flex flex-column">
-                <input x-model="post.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
-                <input x-model="post.authorName" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
-
+                <input x-model="data.title" class="form-control form-control-transparent form-control-title" type="text" name="title" placeholder="Title"/>
+                <input x-model="data.author" class="form-control form-control-transparent form-control-author" type="text" name="authorName" placeholder="Author"/>
                 <div class="mt-2" wire:ignore>
                     <div x-ref="quillEditor"
                          x-init="
                                 quill = new Quill($refs.quillEditor, {placeholder: 'Write something great...',theme: 'bubble'});
                                 quill.on('text-change', function () {
-                                $dispatch('input', Container.setBody(quill.root.innerHTML));
+                                $dispatch('input', Container.onBodyInput(quill.root.innerHTML));
                                 });"
                          wire:model.debounce.2000ms="description">
                         <p class="lead"></p>
@@ -99,7 +89,7 @@
 
 <script>
     Object.defineProperty(String.prototype, 'capitalize', {
-        value: function() {
+        value: function () {
             return this.charAt(0).toUpperCase() + this.slice(1);
         },
         enumerable: false
@@ -112,35 +102,23 @@
     })
 
     class PageController {
+        Container = this
+        notifier = new NoticeHandler()
+
         /* API endpoints */
-        CREATE_URL = "/pages/api/create"
-        CAT_LIST_URL = "/category/api/list"
-        CAT_GET_URL = "/category/api/get"
+        PAGE_CREATE_URL = "/pages/api/create"
+        CAT_LIST_GET = "/category/api/list"
         STATUSES_GET_URL = "/pages/api/statuses"
 
-        Container = {}
-        post = {}
-        category = '';
-        categoriesOptions = [];
-        subcategoriesOptions = [];
-        statusesOptions = [];
+        data = {}
 
-        constructor() {
-            this.Container = this
-            this.notifier = new NoticeHandler()
-        }
-
-        setBody(body) {
-            this.post.body = body
-        }
-
-        getFields() {
-            fetch(this.CAT_LIST_URL)
+        initialize() {
+            fetch(this.CAT_LIST_GET)
                 .then(res => res.json())
                 .then(res => {
-                    this.categoriesOptions = res
+                    this.categoriesList = res
+                    this.renderCategories()
                 })
-
             fetch(this.STATUSES_GET_URL)
                 .then(res => res.json())
                 .then(res => {
@@ -148,23 +126,29 @@
                 })
         }
 
-        getSubcategories() {
-            this.subcategoriesOptions = []
-            if (this.category) {
-                fetch(`${this.CAT_GET_URL}/${this.category}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        this.subcategoriesOptions = res
-                    })
+        onCategoriesChange (categoryId) {
+            this.data.category = categoryId
+            this.renderCategories(categoryId)
+        }
+        onSubcategoriesChange (categoryId) {
+            this.data.category = categoryId
+        }
+
+        renderCategories (categoryId) {
+            this.categoriesOptions = this.categoriesList.filter(item => {
+                return item.parentId == null
+            })
+            if (categoryId) {
+                this.subcategoriesOptions = this.categoriesList.filter(item => {
+                    return item.parentId == categoryId
+                })
             }
         }
 
         submit() {
-            fetch(this.CREATE_URL, {
-                headers: {
-                    'Content-Type': 'application/json;charset=utf-8'
-                },
-                body: JSON.stringify(this.post),
+            fetch(`${this.PAGE_CREATE_URL}`, {
+                headers: {'Content-Type': 'application/json;charset=utf-8'},
+                body: JSON.stringify(this.data),
                 method: "POST"
             })
                 .then((res) => res.json())
@@ -173,21 +157,20 @@
                         this.notifier.add({type: 'success', text: 'Page is created'});
 
                         /* RESET FORM */
-                        this.post = {};
-                        var element = document.getElementsByClassName("ql-editor");
-                        element[0].innerHTML = "";
+                        this.data = {};
+                        document.querySelector(".ql-editor").innerHTML = "";
                         /*************/
                     } else {
-                        this.categories = []
-                        this.categories = ''
-                        this.categories = false
-
                         Object.keys(res).forEach((key, index) => {
                             this.notifier.add({type: 'error', text: `'${key.capitalize()}' - ${res[key]}`});
                         });
                     }
 
                 })
+        }
+
+        onBodyInput(body) {
+            this.data.body = body
         }
     }
 
