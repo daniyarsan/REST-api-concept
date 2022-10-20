@@ -96,7 +96,7 @@
                             <div class="col-md-6 mt-3">
                                 <div class="card page-card">
                                     <div class="card-body">
-                                        <h5 x-text="page.title" class="card-title"></h5>
+                                        <h5 :style="{cursor: 'pointer'}" @click="window.location.href=`edit.html?id=${page.id}`" x-text="page.title" class="card-title"></h5>
                                         <h6 x-text="`Author: ${page?.author}`" class="card-subtitle mb-2 text-muted"></h6>
                                         <h6 x-text="`Category: ${categoriesList.find(item => item.id == page.category).name}`" class="card-subtitle mb-2 text-muted"></h6>
                                         <p x-text="page.body.replace(/(<([^>]+)>)/gi, '').slice(0, 250).concat('...')" class="card-text"></p>
