@@ -108,10 +108,10 @@
         pageId = new URLSearchParams(location.search).get('id')
 
         /* API endpoints */
-        PAGE_UPDATE_URL = "/pages/api/update"
+        PAGE_UPDATE_POST = "/pages/api/update"
         CAT_LIST_GET = "/category/api/list"
-        STATUSES_GET_URL = "/pages/api/statuses"
-        PAGE_GET_URL = "/pages/api/get"
+        STATUSES_LIST_GET = "/pages/api/statuses"
+        PAGE_GET = "/pages/api/get"
 
         data = {}
 
@@ -121,14 +121,14 @@
                 .then(res => {
                     this.categoriesList = res
                 })
-            fetch(this.STATUSES_GET_URL)
+            fetch(this.STATUSES_LIST_GET)
                 .then(res => res.json())
                 .then(res => {
                     this.statusesOptions = res
                 })
 
             /* Get Edit data */
-            fetch(`${this.PAGE_GET_URL}/${this.pageId}`)
+            fetch(`${this.PAGE_GET}/${this.pageId}`)
                 .then(res => res.json())
                 .then(res => {
                     this.data = res
@@ -170,7 +170,7 @@
         }
 
         submit() {
-            fetch(`${this.PAGE_UPDATE_URL}/${this.pageId}`, {
+            fetch(`${this.PAGE_UPDATE_POST}/${this.pageId}`, {
                 headers: {'Content-Type': 'application/json;charset=utf-8'},
                 body: JSON.stringify(this.data),
                 method: "POST"

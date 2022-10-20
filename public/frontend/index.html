@@ -67,32 +67,25 @@
                                <input type="text" name="title" class="form-control" id="title">
                            </div>
 
-                           <div class="form-group mt-3">
-                               <label for="category">Категория</label>
-                               <select @change="Container.getSubcategories()"
-                                       x-model="category"
-                                       name="category"
-                                       class="form-select"
-                                       id="category">
-                                   <option value="">Select Category</option>
+                           <div class="form-group">
+                               <label>Категория</label>
+                               <select x-on:change="Container.onCategoriesChange($event.target.value)" class="form-select">
+                                   <option>Select category</option>
                                    <template x-for="option in Container.categoriesOptions">
-                                       <option :key="option.id" :value="option.id" x-text="option.name"></option>
+                                       <option :selected="option.selected === true" :value="option.id" x-text="option.name"></option>
+                                   </template>
+                               </select>
+                           </div>
+                           <div class="form-group mt-4">
+                               <label>Подкатегория</label>
+                               <select x-on:change="Container.onSubcategoriesChange($event.target.value)" class="form-select">
+                                   <option>Select subcategory</option>
+                                   <template x-for="option in Container.subcategoriesOptions">
+                                       <option :selected="option.selected === true" :value="option.id" x-text="option.name"></option>
                                    </template>
                                </select>
                            </div>
 
-                           <div class="form-group mt-3">
-                               <label for="subcategory">Подкатегория</label>
-                               <select class="form-select"
-                                       name="subcategory"
-                                       x-model="subcategory"
-                                       id="subcategory">
-                                   <option value="">Select subcategory</option>
-                                   <template x-for="option in Container.subcategoriesOptions">
-                                       <option :key="option.id" :value="option.id" x-text="option.name"></option>
-                                   </template>
-                               </select>
-                           </div>
                            <button class="btn btn-primary w-100 mt-3">Начать</button>
                        </form>
                     </div>
@@ -177,53 +170,57 @@
     })
 
     class PageController {
-        CAT_MENU = "/category/api/menu"
-        CAT_LIST_URL = "/category/api/list"
-        CAT_GET_URL = "/category/api/get"
-        PAGES_LIST = "/pages/api/list"
-        PAGES_DELETE = "/pages/api/delete"
-        PAGES_UPDATE_STATUS = "/pages/api/updateStatus"
-
         Container = this
         Paginator = {}
+
+        /* API endpoints */
+        CAT_MENU_GET = "/category/api/menu"
+        CAT_LIST_GET = "/category/api/list"
+        PAGES_UPDATE_STATUS_POST = "/pages/api/updateStatus"
+        PAGES_LIST_GET = "/pages/api/list"
+        PAGES_DELETE_POST = "/pages/api/delete"
+
         categoriesMenuItems = []
         pageItems = []
         openMenuDropdown = false
-        categoriesOptions = [];
-        subcategoriesOptions = [];
-        category = '';
-
         isOpenedSubmitForm = false
+
         currentPage = localStorage.getItem('currentPage') ?? 1
         currentCategory = localStorage.getItem('currentCategory') ?? false
 
         initialize() {
             this.fetchPages()
-            this.getFields()
+            fetch(this.CAT_LIST_GET)
+                .then(res => res.json())
+                .then(res => {
+                    this.categoriesList = res
+                    this.renderCategories()
+                })
         }
 
-        getCategoriesMenu() {
-            fetch(this.CAT_MENU).then(res => res.json())
-                .then(res => this.categoriesMenuItems = res)
+        renderCategories (categoryId) {
+            this.categoriesOptions = this.categoriesList.filter(item => {
+                return item.parentId == null
+            })
+            if (categoryId) {
+                this.subcategoriesOptions = this.categoriesList.filter(item => {
+                    return item.parentId == categoryId
+                })
+            }
         }
-
-        showPagesPerCategory(category = '') {
-            this.currentCategory = category
-            localStorage.setItem('currentCategory', category)
-            this.fetchPages();
+        onCategoriesChange (categoryId) {
+            // this.data.category = categoryId
+            this.renderCategories(categoryId)
         }
-
-        showResultsPerPage(page) {
-            this.currentPage = page <= 0 ? 1 : page
-            localStorage.setItem('currentPage', page)
-            this.fetchPages();
+        onSubcategoriesChange (categoryId) {
+            // this.data.category = categoryId
         }
 
         fetchPages() {
             let urlParts = []
             urlParts.push(`page=${this.currentPage}`)
             urlParts.push(`filter[category]=${this.currentCategory}`)
-            let url = this.PAGES_LIST+'?'+ urlParts.join('&')
+            let url = this.PAGES_LIST_GET+'?'+ urlParts.join('&')
             fetch(url).then(res => res.json())
                 .then(res => {
                     /* If page doesnt show results -> move to first page */
@@ -239,8 +236,25 @@
                 })
         }
 
+        getCategoriesMenu() {
+            fetch(this.CAT_MENU_GET).then(res => res.json())
+                .then(res => this.categoriesMenuItems = res)
+        }
+
+        showPagesPerCategory(category = '') {
+            this.currentCategory = category
+            localStorage.setItem('currentCategory', category)
+            this.fetchPages();
+        }
+
+        showResultsPerPage(page) {
+            this.currentPage = page <= 0 ? 1 : page
+            localStorage.setItem('currentPage', page)
+            this.fetchPages();
+        }
+
         deleteRecord(page) {
-            fetch(`${this.PAGES_DELETE}/${page.id}`, {
+            fetch(`${this.PAGES_DELETE_POST}/${page.id}`, {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
                 },
@@ -248,28 +262,9 @@
             })
                 .then(res => this.fetchPages())
         }
-
-        getFields() {
-            fetch(this.CAT_LIST_URL)
-                .then(res => res.json())
-                .then(res => {
-                    this.categoriesOptions = res
-                })
-        }
-
-        getSubcategories() {
-            this.subcategoriesOptions = []
-            if (this.category) {
-                fetch(`${this.CAT_GET_URL}/${this.category}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        this.subcategoriesOptions = res
-                    })
-            }
-        }
-
+        
         updateStatus(pageid, status = 'active') {
-            fetch(`${this.PAGES_UPDATE_STATUS}/${pageid}`, {
+            fetch(`${this.PAGES_UPDATE_STATUS_POST}/${pageid}`, {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
                 },
